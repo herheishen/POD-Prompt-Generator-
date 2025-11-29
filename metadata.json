@@ -1,5 +1,7 @@
 {
   "name": "POD Prompt Generator",
   "description": "Transforms user ideas into detailed, print-ready prompts for Print On Demand products using AI.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "geolocation"
+  ]
 }

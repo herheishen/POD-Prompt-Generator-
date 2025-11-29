@@ -102,3 +102,42 @@ export interface ProductContentOutput {
   newProductProposals: string; // New: Proposed new products or combinations
   performanceSimulations: string; // New: Performance simulation for products/collections
 }
+
+export interface ImageEditRequest {
+  base64Image: string;
+  mimeType: string;
+  textPrompt: string;
+}
+
+export interface ImageEditResponse {
+  editedImageBase64: string;
+  editedImageMimeType: string;
+}
+
+export interface VideoGenerationRequest {
+  base64Image: string;
+  mimeType: string;
+  aspectRatio: '16:9' | '9:16';
+}
+
+// Simplified operation response type for polling
+export interface VeoOperation {
+  name: string;
+  done: boolean;
+  response?: {
+    generatedVideos?: Array<{
+      video?: {
+        uri?: string;
+        aspectRatio?: string;
+      };
+    }>;
+  };
+  error?: {
+    code: number;
+    message: string;
+  };
+}
+
+export interface VideoGenerationResponse {
+  videoUri: string;
+}
