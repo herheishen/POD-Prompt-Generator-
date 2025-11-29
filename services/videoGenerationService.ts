@@ -27,21 +27,29 @@ export const generateVideoWithVeo = async (request: VideoGenerationRequest): Pro
       console.warn("window.aistudio not available. API Key selection might be skipped in this environment.");
     }
 
-    const imagePart = {
-      imageBytes: request.base64Image,
-      mimeType: request.mimeType,
-    };
-
-    let operation: VeoOperation = await ai.models.generateVideos({
+    const generateVideoPayload: any = {
       model: 'veo-3.1-fast-generate-preview',
-      prompt: 'Animate this image into a short, dynamic video.', // A general prompt, user can't customize for now
-      image: imagePart,
       config: {
         numberOfVideos: 1,
         resolution: '720p', // Default to 720p as it's generally faster
         aspectRatio: request.aspectRatio,
       },
-    }) as VeoOperation; // Type assertion to match our VeoOperation interface
+    };
+
+    if (request.textPrompt) {
+      generateVideoPayload.prompt = request.textPrompt;
+    }
+
+    if (request.base64Image && request.mimeType) {
+      generateVideoPayload.image = {
+        imageBytes: request.base64Image,
+        mimeType: request.mimeType,
+      };
+    } else if (!request.textPrompt) {
+        throw new Error("Either an image or a text prompt must be provided for video generation.");
+    }
+
+    let operation: VeoOperation = await ai.models.generateVideos(generateVideoPayload) as VeoOperation; // Type assertion to match our VeoOperation interface
 
     // Poll the operation until it's done
     while (!operation.done) {

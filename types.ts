@@ -22,6 +22,7 @@ export interface PromptGenerationRequest {
   ciudadesMicroSegmentos?: string; // New: Specific cities or micro-segments
   feedbackRealCampanas?: string; // New: Real feedback from campaigns, sales, and shares
   preferenciasStorytelling?: string; // New: Visual storytelling preferences and collection narrative
+  userLocation?: { latitude: number; longitude: number }; // Optional: User's current geographical location
 }
 
 export interface PrintifyProduct {
@@ -101,6 +102,8 @@ export interface ProductContentOutput {
   };
   newProductProposals: string; // New: Proposed new products or combinations
   performanceSimulations: string; // New: Performance simulation for products/collections
+  searchGroundingUrls?: string[]; // Optional: URLs from Google Search grounding
+  mapsGroundingUrls?: string[]; // Optional: URLs from Google Maps grounding
 }
 
 export interface ImageEditRequest {
@@ -114,9 +117,24 @@ export interface ImageEditResponse {
   editedImageMimeType: string;
 }
 
+export type ImageAspectRatio = '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '9:16' | '16:9' | '21:9';
+export type ImageSize = '1K' | '2K' | '4K';
+
+export interface ImageGenerationRequest {
+  textPrompt: string;
+  imageSize: ImageSize;
+  aspectRatio: ImageAspectRatio;
+}
+
+export interface ImageGenerationResponse {
+  generatedImageBase64: string;
+  generatedImageMimeType: string;
+}
+
 export interface VideoGenerationRequest {
-  base64Image: string;
-  mimeType: string;
+  base64Image?: string; // Make optional for text-only video generation
+  mimeType?: string; // Make optional for text-only video generation
+  textPrompt?: string; // Add optional text prompt for video generation
   aspectRatio: '16:9' | '9:16';
 }
 
@@ -140,4 +158,40 @@ export interface VeoOperation {
 
 export interface VideoGenerationResponse {
   videoUri: string;
+}
+
+export enum GeminiModelType {
+  Fast = 'flash',
+  FastLite = 'flash-lite', // New: for gemini-2.5-flash-lite
+  Complex = 'pro',
+}
+
+export interface GeminiTaskRequest {
+  prompt: string;
+  modelType: GeminiModelType;
+  enableDeepThinking?: boolean; // New: for thinkingBudget
+}
+
+export interface GeminiTaskResponse {
+  responseText: string;
+}
+
+export interface ImageAnalysisRequest {
+  base64Image: string;
+  mimeType: string;
+  analysisPrompt: string;
+}
+
+export interface ImageAnalysisResponse {
+  analysisResult: string;
+}
+
+export interface VideoAnalysisRequest {
+  base64Video: string;
+  mimeType: string;
+  analysisPrompt: string;
+}
+
+export interface VideoAnalysisResponse {
+  analysisResult: string;
 }

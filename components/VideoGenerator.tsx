@@ -16,6 +16,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 const VideoGenerator: React.FC = () => {
   const [originalImageBase64, setOriginalImageBase64] = useState<string | null>(null);
   const [originalImageMimeType, setOriginalImageMimeType] = useState<string | null>(null);
+  const [videoGenerationPrompt, setVideoGenerationPrompt] = useState<string>(''); // New state for text prompt
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9');
   const [generatedVideoUri, setGeneratedVideoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -40,8 +41,8 @@ const VideoGenerator: React.FC = () => {
   }, []);
 
   const handleGenerateVideo = useCallback(async () => {
-    if (!originalImageBase64 || !originalImageMimeType) {
-      setError('Por favor, primero sube una imagen para generar el video.');
+    if (!originalImageBase64 && !videoGenerationPrompt.trim()) { // Allow generation from prompt only
+      setError('Por favor, sube una imagen O introduce un prompt para generar el video.');
       return;
     }
 
@@ -63,8 +64,9 @@ const VideoGenerator: React.FC = () => {
       }
 
       const request: VideoGenerationRequest = {
-        base64Image: originalImageBase64,
-        mimeType: originalImageMimeType,
+        base64Image: originalImageBase64 || undefined, // Send image if available
+        mimeType: originalImageMimeType || undefined, // Send mimeType if image available
+        textPrompt: videoGenerationPrompt.trim() || undefined, // Send text prompt if available
         aspectRatio: aspectRatio,
       };
 
@@ -88,13 +90,27 @@ const VideoGenerator: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [originalImageBase64, originalImageMimeType, aspectRatio]);
+  }, [originalImageBase64, originalImageMimeType, videoGenerationPrompt, aspectRatio]);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg border border-indigo-200">
       <div className="mb-6">
+        <label htmlFor="videoGenerationPrompt" className="block text-sm font-medium text-gray-700 mb-1">
+          Prompt para generar video (opcional si subes imagen):
+        </label>
+        <textarea
+          id="videoGenerationPrompt"
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          rows={3}
+          placeholder="Describe el video que deseas generar (Ej: 'Un paisaje urbano futurista al atardecer con coches voladores')."
+          value={videoGenerationPrompt}
+          onChange={(e) => setVideoGenerationPrompt(e.target.value)}
+        />
+      </div>
+
+      <div className="mb-6">
         <label htmlFor="videoImageUpload" className="block text-sm font-medium text-gray-700 mb-1">
-          Sube tu imagen para animar:
+          O sube tu imagen para animar (opcional si usas prompt):
         </label>
         <input
           type="file"
@@ -134,7 +150,7 @@ const VideoGenerator: React.FC = () => {
 
       <button
         onClick={handleGenerateVideo}
-        disabled={loading || !originalImageBase64}
+        disabled={loading || (!originalImageBase64 && !videoGenerationPrompt.trim())}
         className="w-full sm:w-auto px-8 py-3 bg-indigo-700 text-white font-bold rounded-lg shadow-md hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 transition duration-300 ease-in-out text-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Generando Video...' : 'Generar Video'}
