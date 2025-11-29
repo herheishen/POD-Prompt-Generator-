@@ -1,9 +1,9 @@
 
 
 export interface PromptGenerationRequest {
-  product: string; // (hoodie, taza, bikini, canvas, phone case, sticker, tote, bundle completo, colección)
+  product: string; // (hoodie, taza, bikini, canvas, phone case, sticker, tote, bundle completo, colección, productos sugeridos por IA)
   visualStyle: string; // (cubano retro, luxury gold, anime neon, vaporwave premium, kawaii kids, cyber latina)
-  buyerPersona: string; // (edad, intereses, cultura, tribu social, comportamiento de compra, hábitos, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor)
+  buyerPersona: string; // (edad, intereses, cultura, tribu social, comportamiento de compra, hábitos, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, interacción cross-platform)
   emotionPurpose: string; // (humor provocador, sensualidad premium, nostalgia, familia, aventura, motivación, deseo, high shareability)
   brandColors: string; // (hex o referencias)
   market: string; // (US, EU, LATAM, JP)
@@ -16,6 +16,12 @@ export interface PromptGenerationRequest {
   plataformasPublicacion?: string; // New: Platforms for publication and necessary adaptations
   objetivoEstrategico?: string; // New: Strategic objective (ventas, viralidad, branding, premium, mass-market)
   microMomentosTriggers?: string; // New: Micro-moments and temporal triggers (events, festivities, schedules, recent viral trends)
+  datosCrossPlatform?: string; // New: Cross-platform data (social behavior, engagement historical per platform)
+  datosHiperlocales?: string; // New: Hyperlocal data (trends, memes, local cultural references)
+  productosPropuestosIA?: string; // New: AI-proposed products or combinations
+  ciudadesMicroSegmentos?: string; // New: Specific cities or micro-segments
+  feedbackRealCampanas?: string; // New: Real feedback from campaigns, sales, and shares
+  preferenciasStorytelling?: string; // New: Visual storytelling preferences and collection narrative
 }
 
 export interface PrintifyProduct {
@@ -54,6 +60,12 @@ export interface VisualAIPrompt {
   versionJ: string; // New: Auto-Time Trigger
   versionK: string; // New: Meta-Bundle
   versionL: string; // New: Full Predictive AI
+  versionM: string; // New: Hyperlocal Adaptive
+  versionN: string; // New: Cross-Platform Optimizer
+  versionO: string; // New: Autonomous Product Creator (Propuesta de nuevos productos o combinaciones)
+  versionP: string; // New: Performance Simulation (Simulación de desempeño)
+  versionQ: string; // New: Omni-channel Adjustment (Ajustes omnicanal en tiempo real)
+  versionR: string; // New: Strategic Decision Making (Decisiones estratégicas de diseño, marketing, bundles)
 }
 
 export interface ProductEmbedding {
@@ -87,4 +99,6 @@ export interface ProductContentOutput {
     dangerous: string;
     collector: string;
   };
+  newProductProposals: string; // New: Proposed new products or combinations
+  performanceSimulations: string; // New: Performance simulation for products/collections
 }

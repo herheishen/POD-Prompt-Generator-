@@ -6,6 +6,16 @@ import { ProductContentOutput, PromptGenerationRequest } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import CopyButton from './CopyButton';
 
+// Fix: Add missing window.aistudio type definition for AI Studio specific functions.
+declare global {
+  interface Window {
+    aistudio: {
+      hasSelectedApiKey: () => Promise<boolean>;
+      openSelectKey: () => Promise<void>;
+    };
+  }
+}
+
 const PromptGenerator: React.FC = () => {
   const [product, setProduct] = useState<string>('');
   const [visualStyle, setVisualStyle] = useState<string>('');
@@ -22,6 +32,12 @@ const PromptGenerator: React.FC = () => {
   const [plataformasPublicacion, setPlataformasPublicacion] = useState<string>('');
   const [objetivoEstrategico, setObjetivoEstrategico] = useState<string>('');
   const [microMomentosTriggers, setMicroMomentosTriggers] = useState<string>('');
+  const [datosCrossPlatform, setDatosCrossPlatform] = useState<string>('');
+  const [datosHiperlocales, setDatosHiperlocales] = useState<string>('');
+  const [productosPropuestosIA, setProductosPropuestosIA] = useState<string>('');
+  const [ciudadesMicroSegmentos, setCiudadesMicroSegmentos] = useState<string>('');
+  const [feedbackRealCampanas, setFeedbackRealCampanas] = useState<string>('');
+  const [preferenciasStorytelling, setPreferenciasStorytelling] = useState<string>('');
 
 
   const [generatedContent, setGeneratedContent] = useState<ProductContentOutput | null>(null);
@@ -54,6 +70,12 @@ const PromptGenerator: React.FC = () => {
       plataformasPublicacion: plataformasPublicacion.trim() !== '' ? plataformasPublicacion : undefined,
       objetivoEstrategico: objetivoEstrategico.trim() !== '' ? objetivoEstrategico : undefined,
       microMomentosTriggers: microMomentosTriggers.trim() !== '' ? microMomentosTriggers : undefined,
+      datosCrossPlatform: datosCrossPlatform.trim() !== '' ? datosCrossPlatform : undefined,
+      datosHiperlocales: datosHiperlocales.trim() !== '' ? datosHiperlocales : undefined,
+      productosPropuestosIA: productosPropuestosIA.trim() !== '' ? productosPropuestosIA : undefined,
+      ciudadesMicroSegmentos: ciudadesMicroSegmentos.trim() !== '' ? ciudadesMicroSegmentos : undefined,
+      feedbackRealCampanas: feedbackRealCampanas.trim() !== '' ? feedbackRealCampanas : undefined,
+      preferenciasStorytelling: preferenciasStorytelling.trim() !== '' ? preferenciasStorytelling : undefined,
     };
 
     try {
@@ -109,6 +131,12 @@ const PromptGenerator: React.FC = () => {
     plataformasPublicacion,
     objetivoEstrategico,
     microMomentosTriggers,
+    datosCrossPlatform,
+    datosHiperlocales,
+    productosPropuestosIA,
+    ciudadesMicroSegmentos,
+    feedbackRealCampanas,
+    preferenciasStorytelling,
   ]);
 
   const renderSection = (title: string, content: string | React.JSX.Element, copyText?: string): React.JSX.Element => (
@@ -132,7 +160,7 @@ const PromptGenerator: React.FC = () => {
             type="text"
             id="product"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: hoodie, taza, bikini, poster, bundle completo, colección"
+            placeholder="Ej: hoodie, taza, bikini, poster, bundle completo, colección, productos sugeridos por IA"
             value={product}
             onChange={(e) => setProduct(e.target.value)}
           />
@@ -149,12 +177,12 @@ const PromptGenerator: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="buyerPersona" className="block text-sm font-medium text-gray-700 mb-1">Buyer persona (edad, intereses, cultura, micro-emociones, sensibilidad cultural, tipo de humor, etc.):</label>
+          <label htmlFor="buyerPersona" className="block text-sm font-medium text-gray-700 mb-1">Buyer persona (edad, intereses, cultura, micro-emociones, sensibilidad cultural, tipo de humor, interacción cross-platform, etc.):</label>
           <input
             type="text"
             id="buyerPersona"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: hombres 25+, gamers, madres, o 'fans de la cultura cubana con micro-emoción de nostalgia vibrante, valoran humor sarcástico'"
+            placeholder="Ej: hombres 25+, gamers, madres, o 'fans de la cultura cubana con micro-emoción de nostalgia vibrante, valoran humor sarcástico, activos en TikTok'"
             value={buyerPersona}
             onChange={(e) => setBuyerPersona(e.target.value)}
           />
@@ -291,6 +319,72 @@ const PromptGenerator: React.FC = () => {
             onChange={(e) => setMicroMomentosTriggers(e.target.value)}
           />
         </div>
+        <div className="md:col-span-2">
+          <label htmlFor="datosCrossPlatform" className="block text-sm font-medium text-gray-700 mb-1">Datos cross-platform (comportamiento en redes, engagement histórico por plataforma) (opcional):</label>
+          <textarea
+            id="datosCrossPlatform"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ej: 'Los posts con video en TikTok tienen un 15% más de CTR que en Instagram. Las stories de Instagram con encuestas aumentan el engagement un 10%.'"
+            rows={2}
+            value={datosCrossPlatform}
+            onChange={(e) => setDatosCrossPlatform(e.target.value)}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label htmlFor="datosHiperlocales" className="block text-sm font-medium text-gray-700 mb-1">Datos hiperlocales (trends, memes, referencias culturales locales) (opcional):</label>
+          <textarea
+            id="datosHiperlocales"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ej: 'El meme del 'perrito cheems' es muy popular en LATAM, usar referencias a 'cafecito' en Miami aumenta la conversión.' "
+            rows={2}
+            value={datosHiperlocales}
+            onChange={(e) => setDatosHiperlocales(e.target.value)}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label htmlFor="productosPropuestosIA" className="block text-sm font-medium text-gray-700 mb-1">Productos propuestos por IA (opcional):</label>
+          <textarea
+            id="productosPropuestosIA"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ej: 'La IA sugirió una funda para móvil con el mismo diseño que el hoodie y una taza con un patrón similar. '"
+            rows={2}
+            value={productosPropuestosIA}
+            onChange={(e) => setProductosPropuestosIA(e.target.value)}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label htmlFor="ciudadesMicroSegmentos" className="block text-sm font-medium text-gray-700 mb-1">Ciudades o micro-segmentos específicos (opcional):</label>
+          <input
+            type="text"
+            id="ciudadesMicroSegmentos"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ej: 'Miami (Little Havana), CDMX (Roma Norte)' "
+            value={ciudadesMicroSegmentos}
+            onChange={(e) => setCiudadesMicroSegmentos(e.target.value)}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label htmlFor="feedbackRealCampanas" className="block text-sm font-medium text-gray-700 mb-1">Feedback real de campañas, ventas y shares (opcional):</label>
+          <textarea
+            id="feedbackRealCampanas"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ej: 'La campaña de TikTok #CubanVibes generó 1.5M views, pero el CTR fue bajo (0.8%). Los clientes pidieron más opciones de color en los hoodies.'"
+            rows={2}
+            value={feedbackRealCampanas}
+            onChange={(e) => setFeedbackRealCampanas(e.target.value)}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label htmlFor="preferenciasStorytelling" className="block text-sm font-medium text-gray-700 mb-1">Preferencias de storytelling visual y narrativa de colecciones (opcional):</label>
+          <textarea
+            id="preferenciasStorytelling"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ej: 'Las colecciones deben contar la historia de un viaje por Cuba, desde sus playas vibrantes hasta sus noches de jazz. La narrativa debe ser nostálgica pero moderna.'"
+            rows={2}
+            value={preferenciasStorytelling}
+            onChange={(e) => setPreferenciasStorytelling(e.target.value)}
+          />
+        </div>
       </div>
 
       <button
@@ -366,6 +460,12 @@ const PromptGenerator: React.FC = () => {
           {renderSection("🎨 3. Prompt IA Diseño Visual (Auto-Time Trigger)", generatedContent.visualAIPrompt.versionJ, generatedContent.visualAIPrompt.versionJ)}
           {renderSection("🎨 3. Prompt IA Diseño Visual (Meta-Bundle)", generatedContent.visualAIPrompt.versionK, generatedContent.visualAIPrompt.versionK)}
           {renderSection("🎨 3. Prompt IA Diseño Visual (Full Predictive AI)", generatedContent.visualAIPrompt.versionL, generatedContent.visualAIPrompt.versionL)}
+          {renderSection("🎨 3. Prompt IA Diseño Visual (Hyperlocal Adaptive)", generatedContent.visualAIPrompt.versionM, generatedContent.visualAIPrompt.versionM)}
+          {renderSection("🎨 3. Prompt IA Diseño Visual (Cross-Platform Optimizer)", generatedContent.visualAIPrompt.versionN, generatedContent.visualAIPrompt.versionN)}
+          {renderSection("🎨 3. Prompt IA Diseño Visual (Autonomous Product Creator)", generatedContent.visualAIPrompt.versionO, generatedContent.visualAIPrompt.versionO)}
+          {renderSection("🎨 3. Prompt IA Diseño Visual (Performance Simulation)", generatedContent.visualAIPrompt.versionP, generatedContent.visualAIPrompt.versionP)}
+          {renderSection("🎨 3. Prompt IA Diseño Visual (Omni-channel Adjustment)", generatedContent.visualAIPrompt.versionQ, generatedContent.visualAIPrompt.versionQ)}
+          {renderSection("🎨 3. Prompt IA Diseño Visual (Strategic Decision Making)", generatedContent.visualAIPrompt.versionR, generatedContent.visualAIPrompt.versionR)}
 
 
           {renderSection(
@@ -396,6 +496,9 @@ const PromptGenerator: React.FC = () => {
             </>,
             JSON.stringify(generatedContent.toneVariants, null, 2) // Copy full JSON for Tone Variants section
           )}
+
+          {renderSection("8. Propuesta de Nuevos Productos", generatedContent.newProductProposals || 'No hay propuestas de nuevos productos.', generatedContent.newProductProposals || '')}
+          {renderSection("9. Simulación de Desempeño", generatedContent.performanceSimulations || 'No hay simulaciones de desempeño disponibles.', generatedContent.performanceSimulations || '')}
         </div>
       )}
     </div>
