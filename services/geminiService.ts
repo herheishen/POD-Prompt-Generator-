@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { ProductContentOutput, PromptGenerationRequest } from '../types';
+import { ProductContentOutput, PromptGenerationRequest, AutonomousFieldsRequest, AutonomousFieldsOutput } from '../types';
 
 // Utility function to get the API key
 const getApiKey = (): string => {
@@ -19,8 +20,14 @@ const systemInstruction = `Actúa como un generador profesional de prompts espec
 OBJETIVO:
 Maximizar ventas, deseo, engagement, valor percibido, viralidad, ROI, branding, retención y repetición de compra. Los prompts deben ser claros, centrados en impresión, legibles, evitando errores, ruido visual o detalles débiles. Deben anticipar micro-trends emergentes y oportunidades comerciales antes de que se demanden.
 
+PROCESO DE GENERACIÓN AUTÓNOMA:
+El usuario proporcionará una "Idea Base". Tu tarea es utilizar esta "Idea Base" como punto de partida crucial.
+Si el usuario NO proporciona un valor específico para los campos "Producto", "Estilo visual", "Buyer persona", "Emoción principal", "Colores clave", y "Mercado objetivo", DEBES INVENTAR Y GENERAR estos valores de forma inteligente y estratégica a partir de la "Idea Base" y tu conocimiento como experto en POD y marketing.
+Debes explicar brevemente la razón estratégica detrás de cada selección o invención.
+Una vez que TODOS los campos (proporcionados por el usuario o generados por ti) estén completos, procederás con la generación del OUTPUT completo.
+
 INSTRUCCIONES CLAVE:
-1.  **Inventar Buyer Persona:** Si el "Buyer persona" del usuario es vago o poco estratégico, crea un buyer persona específico y detallado para el producto, incluyendo edad, intereses, cultura, tribu social, comportamiento de compra, hábitos de consumo, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, e interacción cross-platform, micro-localización. Este buyer persona inventado debe ser parte del output.
+1.  **Inventar Buyer Persona:** Si el "Buyer persona" del usuario es vago o poco estratégico (o si no se proporciona), crea un buyer persona específico y detallado para el producto, incluyendo edad, intereses, cultura, tribu social, comportamiento de compra, hábitos de consumo, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, e interacción cross-platform, micro-localización. Este buyer persona inventado debe ser parte del output, y si lo generas tú, también debe aparecer en 'aiGeneratedBuyerPersona'.
 2.  **Prohibiciones:** Nunca generar boxers o productos no solicitados. Si el producto es ropa interior (bikini, lencería), el diseño debe ser provocativo sin caer en pornografía explícita.
 3.  **Tono Variants:** Genera 5 variantes de tono para el copy (🔥 sexy / 🥺 cute / 🚀 aspiracional / 😈 peligrosa / 🧠 coleccionista).
 4.  **Adaptación Automática (Versión D):** Si se proporciona un "historial de ventas, clics, shares y engagement previo" y "tendencias de mercado detectadas", usa esa información para optimizar automáticamente el color, la composición, focal point, micro-emociones y los elementos secundarios del prompt de la Versión D. Si no se proporciona, crea una versión optimizada basándote en una suposición informada del mercado, buyer persona y tipo de publicación deseada.
@@ -132,11 +139,17 @@ Tu respuesta debe ser un objeto JSON que contenga todas las secciones siguientes
 `;
 
 // Fix: Corrected the `responseSchema` definition to accurately match the `ProductContentOutput` interface
-// and to be syntactically correct.
+// and to be syntactically correct. Added optional fields for search/maps grounding
 const responseSchema = {
   type: Type.OBJECT,
   properties: {
     inventedBuyerPersona: { type: Type.STRING },
+    aiGeneratedProduct: { type: Type.STRING, nullable: true },
+    aiGeneratedVisualStyle: { type: Type.STRING, nullable: true },
+    aiGeneratedBuyerPersona: { type: Type.STRING, nullable: true },
+    aiGeneratedEmotionPurpose: { type: Type.STRING, nullable: true },
+    aiGeneratedBrandColors: { type: Type.STRING, nullable: true },
+    aiGeneratedMarket: { type: Type.STRING, nullable: true },
     printifyProduct: {
       type: Type.OBJECT,
       properties: {
@@ -238,6 +251,16 @@ const responseSchema = {
     performanceSimulations: {
       type: Type.STRING,
     },
+    searchGroundingUrls: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      nullable: true, // Mark as nullable if it can be omitted
+    },
+    mapsGroundingUrls: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      nullable: true, // Mark as nullable if it can be omitted
+    },
   },
   required: [
     'inventedBuyerPersona',
@@ -252,6 +275,208 @@ const responseSchema = {
   ],
 };
 
+// New: System Instruction for autonomous field generation
+const autonomousFieldsSystemInstruction = `Eres un experto en Print-On-Demand y marketing de conversión. Tu tarea es analizar una "Idea Base" proporcionada por el usuario y, de forma autónoma, sugerir los mejores valores para los campos "Producto", "Estilo visual", "Buyer persona", "Emoción principal", "Colores clave", y "Mercado objetivo". Justifica brevemente cada una de tus selecciones con razonamiento comercial, enfoque en viralidad y branding premium.
+
+Reglas:
+- Genera UNA ÚNICA sugerencia para cada campo.
+- El Buyer Persona debe ser ultra específico, describiendo una persona real con motivaciones, micro-emociones y comportamiento de compra.
+- Los colores deben incluir referencias hex o descripciones claras y su razón comercial.
+- La justificación es MANDATORIA para cada campo.
+- La respuesta DEBE ser un JSON estricto que cumpla con el 'responseSchema' proporcionado.`;
+
+// New: Response Schema for autonomous field generation
+const autonomousFieldsResponseSchema = {
+  type: Type.OBJECT,
+  properties: {
+    product: {
+      type: Type.OBJECT,
+      properties: {
+        value: { type: Type.STRING },
+        reason: { type: Type.STRING },
+      },
+      required: ['value', 'reason'],
+    },
+    visualStyle: {
+      type: Type.OBJECT,
+      properties: {
+        value: { type: Type.STRING },
+        reason: { type: Type.STRING },
+      },
+      required: ['value', 'reason'],
+    },
+    buyerPersona: {
+      type: Type.OBJECT,
+      properties: {
+        value: { type: Type.STRING },
+        reason: { type: Type.STRING },
+      },
+      required: ['value', 'reason'],
+    },
+    emotionPurpose: {
+      type: Type.OBJECT,
+      properties: {
+        value: { type: Type.STRING },
+        reason: { type: Type.STRING },
+      },
+      required: ['value', 'reason'],
+    },
+    brandColors: {
+      type: Type.OBJECT,
+      properties: {
+        value: { type: Type.STRING },
+        reason: { type: Type.STRING },
+      },
+      required: ['value', 'reason'],
+    },
+    market: {
+      type: Type.OBJECT,
+      properties: {
+        value: { type: Type.STRING },
+        reason: { type: Type.STRING },
+      },
+      required: ['value', 'reason'],
+    },
+  },
+  required: ['product', 'visualStyle', 'buyerPersona', 'emotionPurpose', 'brandColors', 'market'],
+};
+
+
+// Helper function for Google Search Grounding
+async function fetchSearchGroundingData(query: string): Promise<{ text: string; urls: string[] }> {
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+  try {
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ parts: [{ text: query }] }],
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+
+    const urls: string[] = [];
+    if (response.candidates?.[0]?.groundingMetadata?.groundingChunks) {
+      for (const chunk of response.candidates[0].groundingMetadata.groundingChunks) {
+        if ((chunk as any).web?.uri) { // Type assertion for web property
+          urls.push((chunk as any).web.uri);
+        }
+      }
+    }
+
+    return { text: response.text || '', urls: urls };
+
+  } catch (error) {
+    console.error("Error during Google Search grounding:", error);
+    // Do not throw, return empty or partial data to allow main prompt generation to proceed
+    return { text: '', urls: [] };
+  }
+}
+
+// Helper function for Google Maps Grounding
+async function fetchMapsGroundingData(query: string, latLng?: { latitude: number; longitude: number }): Promise<{ text: string; urls: string[] }> {
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+  try {
+    const config: any = {
+      tools: [{ googleMaps: {} }],
+    };
+
+    if (latLng) {
+      config.toolConfig = {
+        retrievalConfig: {
+          latLng: latLng,
+        },
+      };
+    }
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ parts: [{ text: query }] }],
+      config: config,
+    });
+
+    const urls: string[] = [];
+    if (response.candidates?.[0]?.groundingMetadata?.groundingChunks) {
+      for (const chunk of response.candidates[0].groundingMetadata.groundingChunks) {
+        if ((chunk as any).maps?.uri) { // Type assertion for maps property
+          urls.push((chunk as any).maps.uri);
+        }
+        if ((chunk as any).maps?.placeAnswerSources) {
+          for (const source of (chunk as any).maps.placeAnswerSources) {
+            if (source.reviewSnippets) {
+              for (const snippet of source.reviewSnippets) {
+                if (snippet.uri) {
+                  urls.push(snippet.uri);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return { text: response.text || '', urls: urls }; // Corrected to return urls
+
+  } catch (error) {
+    console.error("Error during Google Maps grounding:", error);
+    // Do not throw, return empty or partial data to allow main prompt generation to proceed
+    return { text: '', urls: [] };
+  }
+}
+
+// New: Function to generate autonomous fields
+export const generateAutonomousFields = async (request: AutonomousFieldsRequest): Promise<AutonomousFieldsOutput> => {
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+
+  try {
+    if (typeof window.aistudio !== 'undefined' && typeof window.aistudio.hasSelectedApiKey === 'function') {
+      const apiKeyReady = await window.aistudio.hasSelectedApiKey();
+      if (!apiKeyReady) {
+        await window.aistudio.openSelectKey();
+      }
+    } else {
+      console.warn("window.aistudio not available for autonomous fill. API Key selection might be skipped in this environment.");
+    }
+
+    const promptText = `Idea Base del usuario: ${request.baseIdea}`;
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview', // Use Pro for this complex task
+      contents: [{ parts: [{ text: promptText }] }],
+      config: {
+        systemInstruction: autonomousFieldsSystemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: autonomousFieldsResponseSchema,
+        temperature: 0.7, // Lower temperature for more consistent, factual suggestions
+        topP: 0.8,
+        topK: 40,
+      },
+    });
+
+    const jsonStr = response.text?.trim();
+
+    if (!jsonStr) {
+      throw new Error("No JSON response received for autonomous field generation.");
+    }
+
+    let parsedResponse: AutonomousFieldsOutput;
+    try {
+      parsedResponse = JSON.parse(jsonStr);
+    } catch (parseError) {
+      console.error("Failed to parse JSON response for autonomous fields:", jsonStr, parseError);
+      throw new Error(`Invalid JSON response for autonomous fields from API: ${jsonStr}`);
+    }
+
+    return parsedResponse;
+
+  } catch (error) {
+    console.error("Error generating autonomous fields:", error);
+    if ((error as Error).message.includes("Requested entity was not found.")) {
+      throw new Error('Error con la clave API. Por favor, selecciona tu clave API de nuevo. Asegúrate de usar una clave de un proyecto de GCP con facturación activada.');
+    }
+    throw new Error(`Failed to generate autonomous fields: ${(error as Error).message}`);
+  }
+};
+
 
 export const generatePodPrompt = async (request: PromptGenerationRequest): Promise<ProductContentOutput> => {
   // Create a new GoogleGenAI instance right before making an API call
@@ -259,13 +484,17 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
   const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
   const userIdeaParts: string[] = [
-    `Producto: ${request.product}`,
-    `Estilo visual: ${request.visualStyle}`,
-    `Buyer persona: ${request.buyerPersona}`,
-    `Emoción principal: ${request.emotionPurpose}`,
-    `Colores clave: ${request.brandColors}`,
-    `Mercado objetivo: ${request.market}`,
+    `Idea Base del usuario: ${request.baseIdea}`,
   ];
+
+  // Prioritize user-provided values, otherwise instruct AI to generate them
+  userIdeaParts.push(`Producto: ${request.product || 'NO ESPECIFICADO. Genera un producto POD estratégico a partir de la Idea Base.'}`);
+  userIdeaParts.push(`Estilo visual: ${request.visualStyle || 'NO ESPECIFICADO. Genera un estilo visual coherente y estratégico a partir de la Idea Base.'}`);
+  userIdeaParts.push(`Buyer persona: ${request.buyerPersona || 'NO ESPECIFICADO. Genera un Buyer Persona ultra específico y accionable a partir de la Idea Base.'}`);
+  userIdeaParts.push(`Emoción principal: ${request.emotionPurpose || 'NO ESPECIFICADO. Genera una emoción principal potente a partir de la Idea Base.'}`);
+  userIdeaParts.push(`Colores clave: ${request.brandColors || 'NO ESPECIFICADO. Genera 3-5 colores clave con razón comercial a partir de la Idea Base.'}`);
+  userIdeaParts.push(`Mercado objetivo: ${request.market || 'NO ESPECIFICADO. Genera un mercado objetivo específico (países, nichos, comunidades) a partir de la Idea Base.'}`);
+
 
   if (request.materialImpresion) userIdeaParts.push(`Material de impresión: ${request.materialImpresion}`);
   if (request.tecnicaImpresionPreferida) userIdeaParts.push(`Técnica de impresión preferida: ${request.tecnicaImpresionPreferida}`);
@@ -283,7 +512,8 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
   if (request.feedbackRealCampanas) userIdeaParts.push(`Feedback real de campañas, ventas y shares: ${request.feedbackRealCampanas}`);
   if (request.preferenciasStorytelling) userIdeaParts.push(`Preferencias de storytelling visual y narrativa de colecciones: ${request.preferenciasStorytelling}`);
 
-  const userIdea = userIdeaParts.join('\n');
+  let searchGroundingUrls: string[] = [];
+  let mapsGroundingUrls: string[] = [];
 
   try {
     // Ensure window.aistudio is available before calling its methods
@@ -298,6 +528,32 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
     } else {
       console.warn("window.aistudio not available. API Key selection might be skipped in this environment.");
     }
+
+    // --- Search Grounding ---
+    if (request.tendenciasMercadoDetectadas || request.datosHiperlocales || request.microMomentosTriggers) {
+      const searchQuery = `Información actualizada sobre ${request.tendenciasMercadoDetectadas || ''} ${request.datosHiperlocales || ''} ${request.microMomentosTriggers || ''}`;
+      const searchResult = await fetchSearchGroundingData(searchQuery);
+      if (searchResult.text) {
+        userIdeaParts.push(`Información de Google Search (actualizada): ${searchResult.text}`);
+      }
+      if (searchResult.urls.length > 0) {
+        searchGroundingUrls = searchResult.urls;
+      }
+    }
+
+    // --- Maps Grounding ---
+    if (request.market || request.ciudadesMicroSegmentos || request.userLocation) {
+      const mapsQuery = `Puntos de interés o culturalmente relevantes en ${request.ciudadesMicroSegmentos || request.market || 'mi área'}`;
+      const mapsResult = await fetchMapsGroundingData(mapsQuery, request.userLocation);
+      if (mapsResult.text) {
+        userIdeaParts.push(`Información de Google Maps (localización): ${mapsResult.text}`);
+      }
+      if (mapsResult.urls.length > 0) {
+        mapsGroundingUrls = mapsResult.urls;
+      }
+    }
+
+    const userIdea = userIdeaParts.join('\n');
 
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-3-pro-preview', // Using gemini-3-pro-preview for complex text tasks
@@ -339,7 +595,15 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
       !parsedResponse.newProductProposals ||
       !parsedResponse.performanceSimulations
     ) {
-      throw new Error("API response is missing one or more required top-level fields.");
+      throw new Error("API response is missing one or más required top-level fields.");
+    }
+
+    // Attach grounding URLs to the parsed response
+    if (searchGroundingUrls.length > 0) {
+      parsedResponse.searchGroundingUrls = searchGroundingUrls;
+    }
+    if (mapsGroundingUrls.length > 0) {
+      parsedResponse.mapsGroundingUrls = mapsGroundingUrls;
     }
 
     return parsedResponse;

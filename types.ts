@@ -1,12 +1,13 @@
 
 
 export interface PromptGenerationRequest {
-  product: string; // (hoodie, taza, bikini, canvas, phone case, sticker, tote, bundle completo, colección, productos sugeridos por IA)
-  visualStyle: string; // (cubano retro, luxury gold, anime neon, vaporwave premium, kawaii kids, cyber latina, futurista, minimal, maximalist)
-  buyerPersona: string; // (edad, intereses, cultura, tribu social, comportamiento de compra, hábitos, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, interacción cross-platform, micro-localización)
-  emotionPurpose: string; // (humor provocador, sensualidad premium, nostalgia, familia, aventura, motivación, deseo, high shareability, viral hook, triggers psicológicos)
-  brandColors: string; // (hex o referencias)
-  market: string; // (US, EU, LATAM, JP, ciudades o micro-segmentos específicos)
+  baseIdea: string; // New: Mandatory base idea for autonomous generation
+  product?: string; // Optional: (hoodie, taza, bikini, canvas, phone case, sticker, tote, bundle completo, colección, productos sugeridos por IA)
+  visualStyle?: string; // Optional: (cubano retro, luxury gold, anime neon, vaporwave premium, kawaii kids, cyber latina, futurista, minimal, maximalist)
+  buyerPersona?: string; // Optional: (edad, intereses, cultura, tribu social, comportamiento de compra, hábitos, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, interacción cross-platform, micro-localización)
+  emotionPurpose?: string; // Optional: (humor provocador, sensualidad premium, nostalgia, familia, aventura, motivación, deseo, high shareability, viral hook, triggers psicológicos)
+  brandColors?: string; // Optional: (hex o referencias)
+  market?: string; // Optional: (US, EU, LATAM, JP, ciudades o micro-segmentos específicos)
   historialVentasEngagement?: string; // Optional: detailed sales, clicks, shares, and engagement history, including feedback real
   tipoPublicacion?: string; // Optional: e-commerce product, TikTok hook, FB ad, Instagram story, Pinterest pin, Shorts, Reels, YouTube Shorts, Meta Shops
   materialImpresion?: string; // New: Material de impresión (algodón, poliéster, cerámica, metal, glossy, canvas, cuero, seda, resina, papel fotográfico premium)
@@ -88,6 +89,12 @@ export interface ShopifyIntegration {
 
 export interface ProductContentOutput {
   inventedBuyerPersona: string; // If AI invents/refines it
+  aiGeneratedProduct?: string; // AI's chosen product
+  aiGeneratedVisualStyle?: string; // AI's chosen visual style
+  aiGeneratedBuyerPersona?: string; // AI's generated combined buyer persona string
+  aiGeneratedEmotionPurpose?: string; // AI's chosen emotion
+  aiGeneratedBrandColors?: string; // AI's chosen brand colors
+  aiGeneratedMarket?: string; // AI's chosen market
   printifyProduct: PrintifyProduct;
   socialMediaCopy: SocialMediaCopy;
   visualAIPrompt: VisualAIPrompt;
@@ -131,35 +138,6 @@ export interface ImageGenerationResponse {
   generatedImageMimeType: string;
 }
 
-export interface VideoGenerationRequest {
-  base64Image?: string; // Make optional for text-only video generation
-  mimeType?: string; // Make optional for text-only video generation
-  textPrompt?: string; // Add optional text prompt for video generation
-  aspectRatio: '16:9' | '9:16';
-}
-
-// Simplified operation response type for polling
-export interface VeoOperation {
-  name: string;
-  done: boolean;
-  response?: {
-    generatedVideos?: Array<{
-      video?: {
-        uri?: string;
-        aspectRatio?: string;
-      };
-    }>;
-  };
-  error?: {
-    code: number;
-    message: string;
-  };
-}
-
-export interface VideoGenerationResponse {
-  videoUri: string;
-}
-
 export enum GeminiModelType {
   Fast = 'flash',
   FastLite = 'flash-lite', // New: for gemini-2.5-flash-lite
@@ -194,4 +172,55 @@ export interface VideoAnalysisRequest {
 
 export interface VideoAnalysisResponse {
   analysisResult: string;
+}
+
+// New: Interfaces for Autonomous Field Generation
+export interface AutonomousFieldsRequest {
+  baseIdea: string;
+}
+
+export interface AutonomousFieldValue {
+  value: string;
+  reason: string;
+}
+
+export interface AutonomousFieldsOutput {
+  product: AutonomousFieldValue;
+  visualStyle: AutonomousFieldValue;
+  buyerPersona: AutonomousFieldValue; // This will contain the full generated BP string
+  emotionPurpose: AutonomousFieldValue;
+  brandColors: AutonomousFieldValue;
+  market: AutonomousFieldValue;
+}
+
+// New: Video Generation interfaces
+export interface VideoGenerationRequest {
+  textPrompt?: string;
+  base64Image?: string;
+  mimeType?: string; // Mime type of the base64Image if provided
+  aspectRatio: '16:9' | '9:16';
+}
+
+export interface VideoGenerationResponse {
+  videoUri: string;
+}
+
+// New: VeoOperation interface based on @google/genai operation response
+export interface VeoOperation {
+  done: boolean;
+  name: string; // The operation name for polling
+  metadata?: any; // Optional metadata, not strictly used here
+  error?: {
+    code: number;
+    message: string;
+    details?: any[];
+  };
+  response?: {
+    generatedVideos?: Array<{
+      video?: {
+        uri?: string;
+        // other video properties like `aspectRatio`, `resolution`, `duration`, `mimeType` could be here
+      };
+    }>;
+  };
 }

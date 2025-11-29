@@ -49,11 +49,13 @@ export const generateVideoWithVeo = async (request: VideoGenerationRequest): Pro
         throw new Error("Either an image or a text prompt must be provided for video generation.");
     }
 
-    let operation: VeoOperation = await ai.models.generateVideos(generateVideoPayload) as VeoOperation; // Type assertion to match our VeoOperation interface
+    // Fix: Explicitly cast to VeoOperation to match the new interface
+    let operation: VeoOperation = await ai.models.generateVideos(generateVideoPayload) as VeoOperation;
 
     // Poll the operation until it's done
     while (!operation.done) {
       await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+      // Fix: Explicitly cast to VeoOperation to match the new interface
       operation = await ai.operations.getVideosOperation({ operation: operation }) as VeoOperation;
       if (operation.error) {
         throw new Error(`Veo operation failed with error: ${operation.error.message} (Code: ${operation.error.code})`);

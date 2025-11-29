@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
-import { generatePodPrompt } from '../services/geminiService';
+import { generatePodPrompt, generateAutonomousFields } from '../services/geminiService';
 import { ProductContentOutput, PromptGenerationRequest } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import CopyButton from './CopyButton';
@@ -8,13 +8,65 @@ import CopyButton from './CopyButton';
 // The environment is assumed to provide the types for `window.aistudio`.
 // Removing the explicit `declare global` block to avoid "duplicate declaration" errors.
 
+const productOptions = [
+  { value: 'hoodie', label: 'Hoodie' },
+  { value: 'taza', label: 'Taza' },
+  { value: 'bikini', label: 'Bikini' },
+  { value: 'canvas', label: 'Canvas' },
+  { value: 'phone case', label: 'Funda de Teléfono' },
+  { value: 'sticker', label: 'Sticker' },
+  { value: 'tote', label: 'Tote Bag' },
+  { value: 'bundle completo', label: 'Bundle Completo' },
+  { value: 'colección', label: 'Colección' },
+  { value: 'productos sugeridos por IA', label: 'Productos Sugeridos por IA' },
+];
+
+const visualStyleOptions = [
+  { value: 'cubano retro', label: 'Cubano Retro' },
+  { value: 'luxury gold', label: 'Luxury Gold' },
+  { value: 'anime neon', label: 'Anime Neon' },
+  { value: 'vaporwave premium', label: 'Vaporwave Premium' },
+  { value: 'kawaii kids', label: 'Kawaii Kids' },
+  { value: 'cyber latina', label: 'Cyber Latina' },
+  { value: 'futurista', label: 'Futurista' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'maximalist', label: 'Maximalist' },
+  { value: 'line art premium', label: 'Line Art Premium' },
+  { value: 'flat art moderno', label: 'Flat Art Moderno' },
+  { value: 'vector pop art', label: 'Vector Pop Art' },
+  { value: 'acuarela digital vibrante', label: 'Acuarela Digital Vibrante' },
+  { value: 'comic book ilustracion', label: 'Comic Book Ilustración' },
+  { value: 'glitch art abstracto', label: 'Glitch Art Abstracto' },
+  { value: 'graffiti urbano', label: 'Graffiti Urbano' },
+  { value: 'boho chic minimalista', label: 'Boho Chic Minimalista' },
+  { value: 'cyberpunk futurista', label: 'Cyberpunk Futurista' },
+  { value: 'retro cartoon 90s', label: 'Retro Cartoon 90s' },
+];
+
+// Chip options
+const edadEtapaOptions = ['Gen Z', 'Millennial', 'Adulto joven', 'Padre/madre joven', 'Estudiante', 'Freelancer'];
+const humorOptions = ['ironía/memes', 'sarcasmo suave', 'humor limpio', 'humor oscuro', 'nostalgia'];
+const interaccionDigitalOptions = ['TikTok-first', 'Instagram visual', 'YouTube reviews', 'WhatsApp cierre', 'Facebook comunidad'];
+const sensibilidadCulturalOptions = ['religión', 'familia', 'patriotismo', 'inclusión', 'identidad espiritual'];
+const momentoCompraOptions = ['impulso', 'auto-regalo', 'evento', 'regalo', 'descuento', 'recomendación influencer'];
+
+
 const PromptGenerator: React.FC = () => {
-  const [product, setProduct] = useState<string>('');
-  const [visualStyle, setVisualStyle] = useState<string>('');
-  const [buyerPersona, setBuyerPersona] = useState<string>('');
-  const [emotionPurpose, setEmotionPurpose] = useState<string>('');
-  const [brandColors, setBrandColors] = useState<string>('');
-  const [market, setMarket] = useState<string>('');
+  const [baseIdea, setBaseIdea] = useState<string>(''); // New mandatory input
+
+  const [product, setProduct] = useState<string>(''); // Changed to empty string for initial select state, now optional
+  const [visualStyle, setVisualStyle] = useState<string>(''); // Now optional
+  // Buyer Persona new states
+  const [selectedEdadEtapa, setSelectedEdadEtapa] = useState<string[]>([]);
+  const [selectedHumor, setSelectedHumor] = useState<string[]>([]);
+  const [selectedInteraccionDigital, setSelectedInteraccionDigital] = useState<string[]>([]);
+  const [selectedSensibilidadCultural, setSelectedSensibilidadCultural] = useState<string[]>([]);
+  const [selectedMomentoCompra, setSelectedMomentoCompra] = useState<string[]>([]);
+  const [buyerPersonaDescription, setBuyerPersonaDescription] = useState<string>(''); // Now optional
+
+  const [emotionPurpose, setEmotionPurpose] = useState<string>(''); // Now optional
+  const [brandColors, setBrandColors] = useState<string>(''); // Now optional
+  const [market, setMarket] = useState<string>(''); // Now optional
   const [historialVentasEngagement, setHistorialVentasEngagement] = useState<string>('');
   const [tipoPublicacion, setTipoPublicacion] = useState<string>('');
   const [materialImpresion, setMaterialImpresion] = useState<string>('');
@@ -30,15 +82,112 @@ const PromptGenerator: React.FC = () => {
   const [ciudadesMicroSegmentos, setCiudadesMicroSegmentos] = useState<string>('');
   const [feedbackRealCampanas, setFeedbackRealCampanas] = useState<string>('');
   const [preferenciasStorytelling, setPreferenciasStorytelling] = useState<string>('');
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | undefined>(undefined);
 
 
   const [generatedContent, setGeneratedContent] = useState<ProductContentOutput | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [loadingAutonomous, setLoadingAutonomous] = useState<boolean>(false); // New state for autonomous fill loading
+  const [errorAutonomous, setErrorAutonomous] = useState<string | null>(null); // New state for autonomous fill error
+
+
+  // Function to get user's geolocation
+  const getUserLocation = useCallback(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          setError(null); // Clear any previous location error
+        },
+        (err) => {
+          console.error("Error getting geolocation:", err);
+          const errorMessage = typeof err.message === 'string' ? err.message : `Código de error: ${err.code}`;
+          setError(`Error al obtener la ubicación: ${errorMessage}. Algunas funciones de Maps Grounding podrían no ser precisas.`);
+          setUserLocation(undefined); // Reset location on error
+        },
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      setError("La geolocalización no es soportada por este navegador. Algunas funciones de Maps Grounding podrían no ser precisas.");
+    }
+  }, []);
+
+  // Call getUserLocation on component mount
+  React.useEffect(() => {
+    getUserLocation();
+  }, [getUserLocation]);
+
+  const handleChipToggle = (currentSelection: string[], setter: React.Dispatch<React.SetStateAction<string[]>>, chipValue: string) => {
+    if (currentSelection.includes(chipValue)) {
+      setter(currentSelection.filter(item => item !== chipValue));
+    } else {
+      setter([...currentSelection, chipValue]);
+    }
+  };
+
+  const handleAutonomousFill = useCallback(async () => {
+    if (!baseIdea.trim()) {
+      setErrorAutonomous('Por favor, introduce tu "Idea Base" para autocompletar los campos.');
+      return;
+    }
+
+    setErrorAutonomous(null);
+    setLoadingAutonomous(true);
+
+    try {
+      // Check API key like in other services
+      if (typeof window.aistudio !== 'undefined' && typeof window.aistudio.hasSelectedApiKey === 'function') {
+        const hasKey = await window.aistudio.hasSelectedApiKey();
+        if (!hasKey) {
+          setErrorAutonomous('Por favor, selecciona una clave API para autocompletar los campos.');
+          await window.aistudio.openSelectKey();
+          // Assume success after openSelectKey
+        }
+      } else {
+        console.warn("window.aistudio not available for autonomous fill. API Key selection might be skipped.");
+      }
+
+      const result = await generateAutonomousFields({ baseIdea });
+
+      // Populate the fields with AI-generated values
+      setProduct(result.product.value);
+      setVisualStyle(result.visualStyle.value);
+      // For buyer persona, only set the description textarea. Chips remain for manual selection.
+      setBuyerPersonaDescription(result.buyerPersona.value);
+      setEmotionPurpose(result.emotionPurpose.value);
+      setBrandColors(result.brandColors.value);
+      setMarket(result.market.value);
+
+      // Optionally, show a success message or clear the error if any
+    } catch (err: any) {
+      console.error("Failed to autonomously fill fields:", err);
+      if (err.message && err.message.includes("Requested entity was not found.")) {
+        setErrorAutonomous('Error con la clave API. Por favor, selecciona tu clave API de nuevo. Asegúrate de usar una clave de un proyecto de GCP con facturación activada.');
+        if (typeof window.aistudio !== 'undefined' && typeof window.aistudio.openSelectKey === 'function') {
+          await window.aistudio.openSelectKey();
+        }
+      } else if (err.message && err.message.includes("API_KEY environment variable is not set.")) {
+        setErrorAutonomous('API Key no encontrada. Asegúrate de que tu entorno de ejecución la proporciona. Si estás en AI Studio, por favor, selecciona una clave API.');
+        if (typeof window.aistudio !== 'undefined' && typeof window.aistudio.openSelectKey === 'function') {
+          await window.aistudio.openSelectKey();
+        }
+      } else {
+        setErrorAutonomous(err.message || 'Ocurrió un error al autocompletar los campos. Inténtalo de nuevo.');
+      }
+    } finally {
+      setLoadingAutonomous(false);
+    }
+  }, [baseIdea]);
+
+
   const handleGenerateContent = useCallback(async () => {
-    if (!product.trim() || !visualStyle.trim() || !buyerPersona.trim() || !emotionPurpose.trim() || !brandColors.trim() || !market.trim()) {
-      setError('Por favor, completa todos los campos obligatorios para generar el contenido.');
+    if (!baseIdea.trim()) { // Only baseIdea is mandatory now
+      setError('Por favor, introduce tu "Idea Base" para generar el contenido.');
       return;
     }
 
@@ -46,13 +195,30 @@ const PromptGenerator: React.FC = () => {
     setLoading(true);
     setGeneratedContent(null);
 
+    // Combine buyer persona chips and description into a single string if provided by user
+    const combinedBuyerPersona = (selectedEdadEtapa.length > 0 || selectedHumor.length > 0 ||
+      selectedInteraccionDigital.length > 0 || selectedSensibilidadCultural.length > 0 ||
+      selectedMomentoCompra.length > 0 || buyerPersonaDescription.trim() !== '') ?
+      `Chips seleccionados:
+      Edad/Etapa: ${selectedEdadEtapa.length > 0 ? selectedEdadEtapa.join(', ') : 'No especificado'}
+      Humor: ${selectedHumor.length > 0 ? selectedHumor.join(', ') : 'No especificado'}
+      Interacción digital: ${selectedInteraccionDigital.length > 0 ? selectedInteraccionDigital.join(', ') : 'No especificado'}
+      Sensibilidad cultural: ${selectedSensibilidadCultural.length > 0 ? selectedSensibilidadCultural.join(', ') : 'No especificado'}
+      Momento de compra: ${selectedMomentoCompra.length > 0 ? selectedMomentoCompra.join(', ') : 'No especificado'}
+
+      Descripción detallada del Buyer Persona:
+      ${buyerPersonaDescription.trim() || 'No se proporcionó una descripción detallada.'}`.trim()
+      : undefined; // Send undefined if no buyer persona input is provided by user
+
+
     const request: PromptGenerationRequest = {
-      product,
-      visualStyle,
-      buyerPersona,
-      emotionPurpose,
-      brandColors,
-      market,
+      baseIdea: baseIdea, // New mandatory field
+      product: product.trim() !== '' ? product : undefined,
+      visualStyle: visualStyle.trim() !== '' ? visualStyle : undefined,
+      buyerPersona: combinedBuyerPersona, // Use the combined string here or undefined
+      emotionPurpose: emotionPurpose.trim() !== '' ? emotionPurpose : undefined,
+      brandColors: brandColors.trim() !== '' ? brandColors : undefined,
+      market: market.trim() !== '' ? market : undefined,
       historialVentasEngagement: historialVentasEngagement.trim() !== '' ? historialVentasEngagement : undefined,
       tipoPublicacion: tipoPublicacion.trim() !== '' ? tipoPublicacion : undefined,
       materialImpresion: materialImpresion.trim() !== '' ? materialImpresion : undefined,
@@ -68,6 +234,7 @@ const PromptGenerator: React.FC = () => {
       ciudadesMicroSegmentos: ciudadesMicroSegmentos.trim() !== '' ? ciudadesMicroSegmentos : undefined,
       feedbackRealCampanas: feedbackRealCampanas.trim() !== '' ? feedbackRealCampanas : undefined,
       preferenciasStorytelling: preferenciasStorytelling.trim() !== '' ? preferenciasStorytelling : undefined,
+      userLocation: userLocation, // Pass user's current location
     };
 
     try {
@@ -108,9 +275,17 @@ const PromptGenerator: React.FC = () => {
       setLoading(false);
     }
   }, [
+    baseIdea,
     product,
     visualStyle,
-    buyerPersona,
+    // Buyer Persona dependencies
+    selectedEdadEtapa,
+    selectedHumor,
+    selectedInteraccionDigital,
+    selectedSensibilidadCultural,
+    selectedMomentoCompra,
+    buyerPersonaDescription,
+
     emotionPurpose,
     brandColors,
     market,
@@ -129,6 +304,7 @@ const PromptGenerator: React.FC = () => {
     ciudadesMicroSegmentos,
     feedbackRealCampanas,
     preferenciasStorytelling,
+    userLocation,
   ]);
 
   const renderSection = (title: string, content: string | React.JSX.Element, copyText?: string): React.JSX.Element => (
@@ -143,44 +319,124 @@ const PromptGenerator: React.FC = () => {
     </div>
   );
 
+  const renderChipCategory = (title: string, options: string[], selected: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) => (
+    <div className="mb-4">
+      <label className="block text-xs font-medium text-gray-600 mb-1">{title}</label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            className={`px-3 py-1 text-sm rounded-full border transition-colors duration-200
+                        ${selected.includes(option)
+                          ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700'
+                          : 'bg-indigo-100 text-indigo-800 border-indigo-300 hover:bg-indigo-200'
+                        }`}
+            onClick={() => handleChipToggle(selected, setter, option)}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg border border-indigo-200">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* New Base Idea input with button */}
+        <div className="md:col-span-2 mb-6">
+          <label htmlFor="baseIdea" className="block text-sm font-bold text-gray-800 mb-1">
+            Idea Base (¡MANDATORIO!):
+          </label>
+          <div className="flex gap-2"> {/* Use flex to align textarea and button */}
+            <textarea
+              id="baseIdea"
+              className="flex-grow p-2 border border-indigo-400 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 text-lg"
+              rows={2}
+              placeholder="Ej: 'Diseño de camiseta con loro cubano sexy', 'Taza con frase motivadora para freelancers'"
+              value={baseIdea}
+              onChange={(e) => setBaseIdea(e.target.value)}
+            />
+            <button
+              onClick={handleAutonomousFill}
+              disabled={loadingAutonomous || !baseIdea.trim()}
+              className="px-6 py-2 bg-purple-600 text-white font-bold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              {loadingAutonomous ? 'Generando...' : 'Autocompletar'}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Al hacer clic en "Autocompletar", la IA rellenará los campos vacíos basándose en esta idea.
+          </p>
+          {errorAutonomous && !loadingAutonomous && ( // Display error specific to autonomous fill
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
+              <strong className="font-bold">Error al autocompletar:</strong>
+              <span className="block sm:inline ml-2">{errorAutonomous}</span>
+            </div>
+          )}
+        </div>
+
+
         <div>
-          <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">Producto:</label>
-          <input
-            type="text"
+          <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">Producto (opcional):</label>
+          <select
             id="product"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: hoodie, taza, bikini, poster, bundle completo, colección, productos sugeridos por IA"
             value={product}
             onChange={(e) => setProduct(e.target.value)}
-          />
+          >
+            <option value="">Selecciona un producto POD o deja que la IA sugiera</option>
+            {productOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
         </div>
         <div>
-          <label htmlFor="visualStyle" className="block text-sm font-medium text-gray-700 mb-1">Estilo visual:</label>
-          <input
-            type="text"
+          <label htmlFor="visualStyle" className="block text-sm font-medium text-gray-700 mb-1">Estilo visual (opcional):</label>
+          <select
             id="visualStyle"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: cubano retro, cyberpunk minimal, luxury gold, futurista, minimal, maximalist"
             value={visualStyle}
             onChange={(e) => setVisualStyle(e.target.value)}
-          />
+          >
+            <option value="">Selecciona un estilo visual o deja que la IA sugiera</option>
+            {visualStyleOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
         </div>
-        <div>
-          <label htmlFor="buyerPersona" className="block text-sm font-medium text-gray-700 mb-1">Buyer persona (edad, intereses, cultura, micro-emociones, sensibilidad cultural, tipo de humor, interacción cross-platform, micro-localización, etc.):</label>
-          <input
-            type="text"
-            id="buyerPersona"
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: 'hombres 25+, gamers, madres, o fans de la cultura cubana con micro-emoción de nostalgia vibrante, valoran humor sarcástico, activos en TikTok en Miami y interactúan en Twitter sobre trends locales'"
-            value={buyerPersona}
-            onChange={(e) => setBuyerPersona(e.target.value)}
-          />
+        
+        {/* Buyer Persona Section */}
+        <div className="md:col-span-2 p-4 border border-gray-200 rounded-lg bg-gray-50">
+          <label className="block text-sm font-bold text-gray-800 mb-3">
+              Define a tu Buyer Persona (opcional, la IA puede inventarlo si está vacío):
+          </label>
+          {renderChipCategory('Edad/Etapa de vida', edadEtapaOptions, selectedEdadEtapa, setSelectedEdadEtapa)}
+          {renderChipCategory('Tipo de Humor', humorOptions, selectedHumor, setSelectedHumor)}
+          {renderChipCategory('Interacción Digital', interaccionDigitalOptions, selectedInteraccionDigital, setSelectedInteraccionDigital)}
+          {renderChipCategory('Sensibilidad Cultural', sensibilidadCulturalOptions, selectedSensibilidadCultural, setSelectedSensibilidadCultural)}
+          {renderChipCategory('Momento de Compra', momentoCompraOptions, selectedMomentoCompra, setSelectedMomentoCompra)}
+
+          <div>
+              <label htmlFor="buyerPersonaDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción profunda (la clave para la conversión):
+              </label>
+              <textarea
+                  id="buyerPersonaDescription"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  rows={6}
+                  placeholder="Describe a UNA persona real (no un grupo). Incluye edad, intereses, entorno cultural, valores, tipo de humor, emociones gatillo, plataformas donde compra y razón de compra. Ej: 'Sofía, 28, diseñadora gráfica en Madrid. Nostálgica de la Cuba de sus abuelos, valora la autenticidad. Humor irónico, se ríe de los memes. Usa Instagram para inspirarse, pero compra impulsivamente en TikTok si un influencer le recomienda algo que la hace sentir única. Busca regalos con historia para sus amigas.'"
+                  value={buyerPersonaDescription}
+                  onChange={(e) => setBuyerPersonaDescription(e.target.value)}
+              ></textarea>
+          </div>
         </div>
+        {/* End Buyer Persona Section */}
+
         <div>
-          <label htmlFor="emotionPurpose" className="block text-sm font-medium text-gray-700 mb-1">Emoción principal:</label>
+          <label htmlFor="emotionPurpose" className="block text-sm font-medium text-gray-700 mb-1">Emoción principal (opcional):</label>
           <input
             type="text"
             id="emotionPurpose"
@@ -191,7 +447,7 @@ const PromptGenerator: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="brandColors" className="block text-sm font-medium text-gray-700 mb-1">Colores clave (hex o referencias):</label>
+          <label htmlFor="brandColors" className="block text-sm font-medium text-gray-700 mb-1">Colores clave (hex o referencias) (opcional):</label>
           <input
             type="text"
             id="brandColors"
@@ -202,7 +458,7 @@ const PromptGenerator: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="market" className="block text-sm font-medium text-gray-700 mb-1">Mercado objetivo:</label>
+          <label htmlFor="market" className="block text-sm font-medium text-gray-700 mb-1">Mercado objetivo (opcional):</label>
           <input
             type="text"
             id="market"
@@ -381,7 +637,7 @@ const PromptGenerator: React.FC = () => {
 
       <button
         onClick={handleGenerateContent}
-        disabled={loading}
+        disabled={loading || loadingAutonomous || !baseIdea.trim()}
         className="w-full sm:w-auto px-8 py-3 bg-indigo-700 text-white font-bold rounded-lg shadow-md hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 transition duration-300 ease-in-out text-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Generando Contenido POD...' : 'Generar Contenido POD'}
@@ -406,6 +662,47 @@ const PromptGenerator: React.FC = () => {
 
       {generatedContent && (
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-8 space-y-6">
+          <h2 className="text-2xl font-bold text-indigo-700 mb-4">Output Generado por IA:</h2>
+
+          {/* Display AI-generated input justifications */}
+          {generatedContent.aiGeneratedProduct && (
+            <div className="mb-4 bg-purple-50 p-3 rounded-md border border-purple-200">
+              <p className="font-bold text-purple-800">Producto Sugerido por IA:</p>
+              <p className="text-gray-700">{generatedContent.aiGeneratedProduct}</p>
+            </div>
+          )}
+          {generatedContent.aiGeneratedVisualStyle && (
+            <div className="mb-4 bg-purple-50 p-3 rounded-md border border-purple-200">
+              <p className="font-bold text-purple-800">Estilo Visual Sugerido por IA:</p>
+              <p className="text-gray-700">{generatedContent.aiGeneratedVisualStyle}</p>
+            </div>
+          )}
+          {generatedContent.aiGeneratedBuyerPersona && (
+            <div className="mb-4 bg-purple-50 p-3 rounded-md border border-purple-200">
+              <p className="font-bold text-purple-800">Buyer Persona Generado por IA:</p>
+              <p className="text-gray-700">{generatedContent.aiGeneratedBuyerPersona}</p>
+            </div>
+          )}
+          {generatedContent.aiGeneratedEmotionPurpose && (
+            <div className="mb-4 bg-purple-50 p-3 rounded-md border border-purple-200">
+              <p className="font-bold text-purple-800">Emoción Principal Sugerida por IA:</p>
+              <p className="text-gray-700">{generatedContent.aiGeneratedEmotionPurpose}</p>
+            </div>
+          )}
+          {generatedContent.aiGeneratedBrandColors && (
+            <div className="mb-4 bg-purple-50 p-3 rounded-md border border-purple-200">
+              <p className="font-bold text-purple-800">Colores Clave Sugeridos por IA:</p>
+              <p className="text-gray-700">{generatedContent.aiGeneratedBrandColors}</p>
+            </div>
+          )}
+          {generatedContent.aiGeneratedMarket && (
+            <div className="mb-4 bg-purple-50 p-3 rounded-md border border-purple-200">
+              <p className="font-bold text-purple-800">Mercado Objetivo Sugerido por IA:</p>
+              <p className="text-gray-700">{generatedContent.aiGeneratedMarket}</p>
+            </div>
+          )}
+
+
           {renderSection("Buyer Persona Inventado", generatedContent.inventedBuyerPersona, generatedContent.inventedBuyerPersona)}
 
           {renderSection(
@@ -438,6 +735,32 @@ const PromptGenerator: React.FC = () => {
               <p><strong>Versión Pinterest SEO:</strong> {generatedContent.socialMediaCopy.pinterestSEO}</p>
             </>,
             JSON.stringify(generatedContent.socialMediaCopy, null, 2) // Copy full JSON for Social Media section
+          )}
+
+          {generatedContent.searchGroundingUrls && generatedContent.searchGroundingUrls.length > 0 && (
+            <div className="mb-6 bg-blue-50 p-4 rounded-md border border-blue-200">
+              <h3 className="text-xl font-bold text-blue-800 flex items-center mb-2">
+                <span className="text-blue-600 mr-2">🔍</span> Fuentes de Google Search
+              </h3>
+              <ul className="list-disc list-inside ml-4 text-blue-700">
+                {generatedContent.searchGroundingUrls.map((url, index) => (
+                  <li key={index}><a href={url} target="_blank" rel="noopener noreferrer" className="hover:underline">{url}</a></li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {generatedContent.mapsGroundingUrls && generatedContent.mapsGroundingUrls.length > 0 && (
+            <div className="mb-6 bg-green-50 p-4 rounded-md border border-green-200">
+              <h3 className="text-xl font-bold text-green-800 flex items-center mb-2">
+                <span className="text-green-600 mr-2">🗺️</span> Fuentes de Google Maps
+              </h3>
+              <ul className="list-disc list-inside ml-4 text-green-700">
+                {generatedContent.mapsGroundingUrls.map((url, index) => (
+                  <li key={index}><a href={url} target="_blank" rel="noopener noreferrer" className="hover:underline">{url}</a></li>
+                ))}
+              </ul>
+            </div>
           )}
 
           {renderSection("🎨 3. Prompt IA Diseño Visual (Mass Market)", generatedContent.visualAIPrompt.versionA, generatedContent.visualAIPrompt.versionA)}
