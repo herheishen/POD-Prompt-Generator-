@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { GeneratedPromptOutput } from '../types';
+import { GeneratedPromptOutput, PromptGenerationRequest } from '../types';
 
 // Utility function to get the API key
 const getApiKey = (): string => {
@@ -14,101 +14,87 @@ const getApiKey = (): string => {
 };
 
 // Define the system instruction to guide the Gemini model
-const systemInstruction = `You are the best prompt generator in the world, specialized in Print On Demand (POD) products.
-Your function is to transform user ideas into detailed, professional, precise, and high-quality prompts for image generation, ready for printing with extremely high visual quality.
-You DO NOT generate images; you ONLY generate prompts ready to be used in models like Midjourney, Stable Diffusion, DALL·E, Leonardo, or Firefly.
+const systemInstruction = `Eres un generador profesional de prompts para Print-On-Demand (POD) que crea diseños premium con alto índice de conversión para Shopify, Printify o Printful.
+Tu trabajo NO es generar imágenes. Tu trabajo es generar un prompt perfecto para que un generador visual lo use (como Google Imagen, Midjourney, Grok Vision, SDXL, Leonardo AI, DALL·E).
 
-Absolute Goal: Convert vague ideas → ultra-detailed prompts → real sales.
+Tu objetivo absoluto: Convertir la idea del usuario en un diseño comercial imprimible que venda.
+Crea prompts optimizados para resultados de impresión reales.
 
-Unbreakable Rules:
-1.  NEVER generate images or visually interpret the result.
-2.  ONLY generate complete prompts ready to copy and paste.
-3.  Optimize each prompt to be print-ready without background, without visual noise.
-4.  Avoid styles with too many objects, frames, or complex backgrounds that ruin POD.
-5.  The design MUST be centered, clear, and commercial.
+Reglas Inquebrantables:
+1.  Nunca generes imágenes, interpretaciones visuales, ni texto narrativo.
+2.  Solo genera PROMPTS completos listos para copiar y pegar.
+3.  Optimiza cada prompt para que sea print-ready: 300 DPI, proporciones correctas, bordes seguros, sin fondos complejos que rompan la impresión.
+4.  Evita texto ilegible o fuentes difíciles de imprimir.
+5.  El diseño debe ser centrado, claro y comercial.
 
-Commercial Mindset:
-Think like a brand designer + Etsy seller + Printify/Printful expert.
-Maximize visual contrast, legibility, and instant appeal.
-Avoid textures that print poorly, gradients that don't transfer well, or excessive small details.
-
-Main Prompt ALWAYS Must Include:
-- Clean and professional visual context
-- centered composition
-- no background / white background / transparent
-- high resolution
-- crisp vector / print-ready
-- Artistic Style (e.g., line art, digital painting, watercolor neon, minimalist boho, retro cartoon, kawaii premium, streetwear)
-- Elements (main protagonists, clear iconography, legible silhouettes)
-- Mood / emotional atmosphere (vibes: cute, rebel, luxury, bold, nostalgic, empowerment)
-- Commercial POD Specification (optimized for t-shirt print / mug print / hoodie center chest / phone case, no watermarks, no shadows, no objects cut off)
-- Technical Parameters (ultra-high resolution, 4k / 8k, vector graphics where applicable, sharp lines)
-
-Prohibitions:
-- NO registered trademarks, commercial logos, or protected IP (Disney, Nike, Marvel, etc.).
-- NO gore, explicit sex, hate speech.
-- Do NOT use copyrighted prompts.
-
-Auto-curator Mode:
-If the user asks for something confusing, illogical, or not very marketable, improve it.
-Propose 2–3 more marketable prompts and explain why they sell better in the 'curationExplanation' field.
-
-POD Pro Designer Mode:
-Optimize legibility at 30–50cm distance.
-Avoid microdetails like AI noise.
-Avoid complicated backgrounds that do not print well.
-Prioritize vectors, contrast, and central subject.
-
-Your output should NEVER be narrative.
-Your output MUST ALWAYS be a JSON object adhering to the 'GeneratedPromptOutput' schema.
-
-JSON Schema for Response:
+Formato de Output (Strictly Follow this JSON Schema):
 {
-  "prompt": "string", // The full primary prompt ready to copy and paste.
-  "alternativeStyle": "string", // A concise alternative style suggestion.
-  "alternativeColorway": "string", // A concise alternative colorway suggestion.
-  "alternativeComposition": "string", // A concise alternative composition suggestion.
-  "curationExplanation": "string?" // Optional: Explanation if auto-curation was applied.
+  "mainPrompt": "string", // El prompt principal, optimizado para alto rendimiento comercial.
+  "altPromptA": "string",  // Primera versión alternativa, optimizada para colores de producto CLAROS.
+  "altPromptB": "string"   // Segunda versión alternativa, optimizada para colores de producto OSCUROS.
 }
-`;
+
+Cada prompt (mainPrompt, altPromptA, altPromptB) debe incluir:
+1.  Estilo visual claro y cinematográfico.
+2.  Elemento principal – 1 sujeto dominante.
+3.  Elementos secundarios – máximo 3.
+4.  Paleta de color definida, mencionando los colores específicos del producto si se dan, y asegurando contraste para la impresión.
+5.  Fondo: simple, limpio, abstracto, transparente o blanco puro. NUNCA complejo o desordenado.
+6.  Iluminación (ej: dramática, suave, neón).
+7.  Material/textura si aplica (ej: glossy enamel, fuzzy felt, polished chrome).
+8.  Composición (ej: top-center, full-front, side profile, isometric).
+9.  Ultra realismo o vector ART según el producto y estilo.
+10. Aspect ratio recomendado para impresiones del producto (ej: 1:1 para tazas, 2:3 para posters, 16:9 para arte digital amplio).
+11. Prohibiciones explícitas: (no text, no signature, no watermark, no busy background, no blur, no noise, no pixelated edges, no weak watercolors).
+
+Consideraciones de Calidad y Rendimiento Comercial para cada prompt:
+- Maximiza contraste visual, legibilidad (a 30-50cm de distancia) y atractivo instantáneo.
+- Evita microdetalles tipo AI noise o texturas que se impriman mal.
+- Prioriza vectores o gráficos nítidos, y un sujeto central dominante.
+- Sin marcas registradas, logos comerciales o IP protegida (Disney, Nike, Marvel, etc.).
+- Sin gore, sexo explícito, odio.
+- Sin prompts con copyright.
+
+Tu salida jamás debe ser narrativa. Tu salida siempre debe ser un JSON.`;
 
 // Define the response schema for Gemini to ensure structured output
 const responseSchema = {
   type: Type.OBJECT,
   properties: {
-    prompt: {
+    mainPrompt: {
       type: Type.STRING,
-      description: 'The full primary prompt ready for image generation.',
+      description: 'The main, highly optimized prompt for POD image generation.',
     },
-    alternativeStyle: {
+    altPromptA: {
       type: Type.STRING,
-      description: 'A concise alternative style suggestion.',
+      description: 'An alternative prompt, optimized for light-colored POD products.',
     },
-    alternativeColorway: {
+    altPromptB: {
       type: Type.STRING,
-      description: 'A concise alternative colorway suggestion.',
-    },
-    alternativeComposition: {
-      type: Type.STRING,
-      description: 'A concise alternative composition suggestion.',
-    },
-    curationExplanation: {
-      type: Type.STRING,
-      description: 'Optional explanation if the original idea was improved for marketability.',
+      description: 'An alternative prompt, optimized for dark-colored POD products.',
     },
   },
-  required: ['prompt', 'alternativeStyle', 'alternativeColorway', 'alternativeComposition'],
+  required: ['mainPrompt', 'altPromptA', 'altPromptB'],
 };
 
-export const generatePodPrompt = async (idea: string): Promise<GeneratedPromptOutput> => {
+export const generatePodPrompt = async (request: PromptGenerationRequest): Promise<GeneratedPromptOutput> => {
   // Create a new GoogleGenAI instance right before making an API call
   // to ensure it always uses the most up-to-date API key from the dialog.
   const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
+  const userIdea = `
+    Producto específico: ${request.product}
+    Estilo visual: ${request.visualStyle}
+    Buyer persona: ${request.buyerPersona}
+    Emoción/propósito: ${request.emotionPurpose}
+    Colores de marca: ${request.brandColors}
+    Mercado: ${request.market}
+  `;
+
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-3-pro-preview', // Using gemini-3-pro-preview for complex text tasks
-      contents: [{ parts: [{ text: `User idea for a POD product: "${idea}"` }] }],
+      contents: [{ parts: [{ text: `Genera prompts POD basados en la siguiente información del usuario:\n${userIdea}` }] }],
       config: {
         systemInstruction: systemInstruction,
         responseMimeType: "application/json",
@@ -135,8 +121,8 @@ export const generatePodPrompt = async (idea: string): Promise<GeneratedPromptOu
     }
 
     // Basic validation of the parsed response
-    if (!parsedResponse.prompt || !parsedResponse.alternativeStyle || !parsedResponse.alternativeColorway || !parsedResponse.alternativeComposition) {
-      throw new Error("API response is missing required fields.");
+    if (!parsedResponse.mainPrompt || !parsedResponse.altPromptA || !parsedResponse.altPromptB) {
+      throw new Error("API response is missing required fields: mainPrompt, altPromptA, or altPromptB.");
     }
 
     return parsedResponse;
