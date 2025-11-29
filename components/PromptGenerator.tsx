@@ -5,6 +5,9 @@ import { ProductContentOutput, PromptGenerationRequest } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import CopyButton from './CopyButton';
 
+// The environment is assumed to provide the types for `window.aistudio`.
+// Removing the explicit `declare global` block to avoid "duplicate declaration" errors.
+
 const PromptGenerator: React.FC = () => {
   const [product, setProduct] = useState<string>('');
   const [visualStyle, setVisualStyle] = useState<string>('');
@@ -160,7 +163,7 @@ const PromptGenerator: React.FC = () => {
             type="text"
             id="visualStyle"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: cubano retro, cyberpunk minimal, luxury gold"
+            placeholder="Ej: cubano retro, cyberpunk minimal, luxury gold, futurista, minimal, maximalist"
             value={visualStyle}
             onChange={(e) => setVisualStyle(e.target.value)}
           />
@@ -171,7 +174,7 @@ const PromptGenerator: React.FC = () => {
             type="text"
             id="buyerPersona"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: hombres 25+, gamers, madres, o 'fans de la cultura cubana con micro-emoción de nostalgia vibrante, valoran humor sarcástico, activos en TikTok en Miami'"
+            placeholder="Ej: 'hombres 25+, gamers, madres, o fans de la cultura cubana con micro-emoción de nostalgia vibrante, valoran humor sarcástico, activos en TikTok en Miami y interactúan en Twitter sobre trends locales'"
             value={buyerPersona}
             onChange={(e) => setBuyerPersona(e.target.value)}
           />
@@ -182,7 +185,7 @@ const PromptGenerator: React.FC = () => {
             type="text"
             id="emotionPurpose"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: deseo, humor, nostalgia, motivación, high shareability"
+            placeholder="Ej: deseo, humor, nostalgia, motivación, high shareability, viral hook, triggers psicológicos"
             value={emotionPurpose}
             onChange={(e) => setEmotionPurpose(e.target.value)}
           />
@@ -204,7 +207,7 @@ const PromptGenerator: React.FC = () => {
             type="text"
             id="market"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: EEUU, EU, LATAM, JP"
+            placeholder="Ej: EEUU, EU, LATAM, JP, ciudades o micro-segmentos específicos"
             value={market}
             onChange={(e) => setMarket(e.target.value)}
           />
@@ -215,7 +218,7 @@ const PromptGenerator: React.FC = () => {
             type="text"
             id="materialImpresion"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: algodón, poliéster, cerámica, metal, glossy, canvas, cuero, seda"
+            placeholder="Ej: algodón, poliéster, cerámica, metal, glossy, canvas, cuero, seda, resina, papel fotográfico premium"
             value={materialImpresion}
             onChange={(e) => setMaterialImpresion(e.target.value)}
           />
@@ -226,7 +229,7 @@ const PromptGenerator: React.FC = () => {
             type="text"
             id="tecnicaImpresionPreferida"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: sublimación, DTG, UV print, offset, screen print"
+            placeholder="Ej: sublimación, DTG, UV print, offset, screen print, serigrafía, foil"
             value={tecnicaImpresionPreferida}
             onChange={(e) => setTecnicaImpresionPreferida(e.target.value)}
           />
@@ -248,17 +251,17 @@ const PromptGenerator: React.FC = () => {
             type="text"
             id="tipoPublicacion"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: e-commerce product, TikTok hook, FB ad, Instagram story, Pinterest pin, Shorts"
+            placeholder="Ej: e-commerce product, TikTok hook, FB ad, Instagram story, Pinterest pin, Shorts, Reels, YouTube Shorts, Meta Shops"
             value={tipoPublicacion}
             onChange={(e) => setTipoPublicacion(e.target.value)}
           />
         </div>
         <div className="md:col-span-2">
-          <label htmlFor="tendenciasMercadoDetectadas" className="block text-sm font-medium text-gray-700 mb-1">Tendencias de mercado detectadas (micro-trends, moda viral, colores en tendencia, memes, eventos culturales) (opcional):</label>
+          <label htmlFor="tendenciasMercadoDetectadas" className="block text-sm font-medium text-gray-700 mb-1">Tendencias de mercado detectadas (micro-trends, moda viral, colores en tendencia, memes, eventos culturales, seasonal trends) (opcional):</label>
           <textarea
             id="tendenciasMercadoDetectadas"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: 'Los diseños minimalistas con colores pastel están ganando tracción en el mercado de la UE para productos de moda. El 'coastal grandmother' es una micro-tendencia viral, 'dark academia' en alza. El Mundial de Fútbol en Julio es un evento cultural.'"
+            placeholder="Ej: 'Los diseños minimalistas con colores pastel están ganando tracción en el mercado de la UE para productos de moda. El 'coastal grandmother' es una micro-tendencia viral, 'dark academia' en alza. El Mundial de Fútbol en Julio es un evento cultural, los colores de otoño están en tendencia.'"
             rows={2}
             value={tendenciasMercadoDetectadas}
             onChange={(e) => setTendenciasMercadoDetectadas(e.target.value)}
@@ -287,12 +290,12 @@ const PromptGenerator: React.FC = () => {
           />
         </div>
         <div className="md:col-span-2">
-          <label htmlFor="objetivoEstrategico" className="block text-sm font-medium text-gray-700 mb-1">Objetivo estratégico (opcional):</label>
+          <label htmlFor="objetivoEstrategico" className="block text-sm font-medium text-gray-700 mb-1">Objetivo estratégico (ventas, viralidad, branding, premium, mass-market, colecciones, ROI, retención, repetición de compra) (opcional):</label>
           <input
             type="text"
             id="objetivoEstrategico"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: ventas, viralidad, branding, premium, mass-market"
+            placeholder="Ej: 'maximizar ventas de la colección 'Cuban Dreams' con un ROI del 30%', 'aumentar la viralidad en TikTok con un hook emocional', 'fomentar la retención de clientes con diseños de alta calidad'"
             value={objetivoEstrategico}
             onChange={(e) => setObjetivoEstrategico(e.target.value)}
           />

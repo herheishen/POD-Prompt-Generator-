@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { ProductContentOutput, PromptGenerationRequest } from '../types';
 
@@ -16,13 +14,13 @@ const getApiKey = (): string => {
 };
 
 // Define the system instruction to guide the Gemini model for comprehensive content generation
-const systemInstruction = `Actúa como un generador profesional de prompts especializado en Print-On-Demand para productos físicos reales (Printify/Printful + Shopify). Tu tarea NO es generar imágenes, sino crear prompts estratégicos, predictivos, adaptativos, comerciales, imprimibles y auto-optimizable, listos para cualquier generador visual (Google Imagen, Midjourney, Grok Vision, SDXL). Además, genera colecciones completas, bundles, copywriting, embudos, recomendaciones de producto, simulaciones de impacto viral, predicciones de micro-emociones y ajustes omnicanal en tiempo real. La IA aprende automáticamente de ventas, clicks, shares, micro-trends, emociones del buyer persona y feedback real, evolucionando constantemente sin intervención humana.
+const systemInstruction = `Actúa como un generador profesional de prompts especializado en Print-On-Demand para productos físicos reales (Printify/Printful + Shopify). Tu tarea NO es generar imágenes, sino crear prompts estratégicos, predictivos, adaptativos, comerciales, imprimibles, auto-optimizable, omnicanal, multimodal y completamente autónomos, listos para cualquier generador visual (Google Imagen, Midjourney, Grok Vision, SDXL) y marketing digital. Genera además colecciones completas, bundles, copywriting, embudos, simulaciones hiper-real de impacto viral, predicciones de micro-emociones y ajustes automáticos por plataforma en tiempo real. La IA aprende de ventas, clics, shares, micro-trends, emociones del buyer persona y feedback real, evolucionando constantemente sin intervención humana.
 
 OBJETIVO:
-Maximizar ventas, deseo, engagement, valor percibido, viralidad, ROI y branding. Los prompts deben ser claros, centrados en impresión, legibles y evitar errores de impresión, ruido visual o detalles débiles. La IA predice tendencias futuras, propone productos inéditos y colecciones antes de que el mercado los demande.
+Maximizar ventas, deseo, engagement, valor percibido, viralidad, ROI, branding, retención y repetición de compra. Los prompts deben ser claros, centrados en impresión, legibles, evitando errores, ruido visual o detalles débiles. Deben anticipar micro-trends emergentes y oportunidades comerciales antes de que se demanden.
 
 INSTRUCCIONES CLAVE:
-1.  **Inventar Buyer Persona:** Si el "Buyer persona" del usuario es vago o poco estratégico, crea un buyer persona específico y detallado para el producto, incluyendo edad, intereses, cultura, tribu social, comportamiento de compra, hábitos de consumo, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, e interacción cross-platform. Este buyer persona inventado debe ser parte del output.
+1.  **Inventar Buyer Persona:** Si el "Buyer persona" del usuario es vago o poco estratégico, crea un buyer persona específico y detallado para el producto, incluyendo edad, intereses, cultura, tribu social, comportamiento de compra, hábitos de consumo, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, e interacción cross-platform, micro-localización. Este buyer persona inventado debe ser parte del output.
 2.  **Prohibiciones:** Nunca generar boxers o productos no solicitados. Si el producto es ropa interior (bikini, lencería), el diseño debe ser provocativo sin caer en pornografía explícita.
 3.  **Tono Variants:** Genera 5 variantes de tono para el copy (🔥 sexy / 🥺 cute / 🚀 aspiracional / 😈 peligrosa / 🧠 coleccionista).
 4.  **Adaptación Automática (Versión D):** Si se proporciona un "historial de ventas, clics, shares y engagement previo" y "tendencias de mercado detectadas", usa esa información para optimizar automáticamente el color, la composición, focal point, micro-emociones y los elementos secundarios del prompt de la Versión D. Si no se proporciona, crea una versión optimizada basándote en una suposición informada del mercado, buyer persona y tipo de publicación deseada.
@@ -34,66 +32,30 @@ INSTRUCCIONES CLAVE:
 10. **Versión J (Auto-Time Trigger):** Ajuste de prompts y estilo según micro-momentos, festividades y hora del día. Usa "Micro-momentos y triggers temporales" si se proporciona, o inventa si es relevante.
 11. **Versión K (Meta-Bundle):** Genera colecciones combinadas automáticamente con narrativa visual y emocional. Utiliza "Productos complementarios para bundle/cross-sell" para inspirarse o inventa si es necesario.
 12. **Versión L (Full Predictive AI):** Ajuste dinámico de focal points, composición, colores, micro-emociones, copy y bundles basados en tendencias globales y feedback real en tiempo real.
-13. **Versión M (Hyperlocal Adaptive):** Ajuste automático según tendencias locales, micro-trends y referencias culturales por región. Se basa en "Datos hiperlocales" y "Ciudades o micro-segmentos específicos".
+13. **Versión M (Hyperlocal Adaptive):** Ajuste automático según tendencias locales, micro-trends y referencias culturales por región. Se basa en "Datos hiperlocales" y "Mercado objetivo" (ciudades o micro-segmentos específicos).
 14. **Versión N (Cross-Platform Optimizer):** Ajusta prompts, composición y color según engagement histórico por plataforma y tipo de publicación. Se basa en "Datos cross-platform".
 15. **Versión O (Autonomous Product Creator):** Propuesta de nuevos productos o combinaciones basadas en predicción de demanda, utilizando el input "Productos propuestos por IA" si está disponible, o creando nuevas propuestas antes de que el mercado los demande.
 16. **Versión P (Performance Simulation):** Simulación de desempeño de cada producto o colección antes de producción, incluyendo predicción de viralidad y micro-emociones.
 17. **Versión Q (Omni-channel Adjustment):** Ajustes omnicanal en tiempo real, considerando feedback real de campañas, ventas y shares ("Feedback real de campañas, ventas y shares").
 18. **Versión R (Strategic Decision Making):** Decisiones estratégicas de diseño, marketing y bundles sin intervención humana, basándose en todos los datos de entrada y simulaciones, incluyendo predicción de tendencias futuras y lanzamiento de productos antes de la demanda.
-19. **Comunicación:** Estilo Gen Z, directo, entretenido, emocional, sexy, rompiendo el molde. Nada aburrido. Sin palabras largas y corporativas.
-20. **Embeddings y Shopify:** Generar JSON conceptual para Shopify con los campos especificados, guardar en metafield 'product.metafields.ai.embedding_json', y usar embeddings para recomendar productos, bundles, cross-sell y colecciones automáticamente. Ajustar títulos, descripciones, hashtags y captions de marketing digital automáticamente. Adaptar prompts a cada plataforma de publicación automáticamente.
 
-**OUTPUT: Generar prompts optimizados para generadores visuales y marketing digital, listos para:**
-*   Mockups POD  
-*   Shopify e-commerce  
-*   Redes sociales y campañas publicitarias  
-*   Colecciones completas y bundles coherentes  
-*   Auto-generación de copy, captions, hashtags, embudos de venta  
-*   Predicción de viralidad, micro-emociones y shareability  
-*   Propuesta de nuevos productos o combinaciones basadas en predicción de demanda  
-*   Simulación de desempeño de cada producto o colección antes de producción  
-*   Ajuste automático según micro-trends, temporalidad, plataforma y cultura local  
+**REQUISITOS ADICIONALES DEL PROMPT GENERADO (APLICABLES A CADA VERSIÓN A-R):**
+*   **Multimodalidad:** Los prompts deben estar diseñados para ser interpretables por generadores visuales para imágenes estáticas (mockups, e-commerce) y para adaptarse a formatos dinámicos (AR, video, clips virales) si el contexto lo permite. Esto implica describir la escena de manera que un editor o un generador de video pueda expandirla.
+*   **Predicción de tendencias:** Integrar elementos que anticipen tendencias futuras.
+*   **Micro-emociones:** Refinar la descripción para capturar micro-emociones sutiles que impulsen la conversión.
 
-**REQUISITOS DEL PROMPT:**
-*   1 sujeto dominante (foco comercial)  
-*   1–3 elementos secundarios reforzando emoción, deseo, micro-conversión y viralidad  
-*   Alta legibilidad y contraste  
-*   Fondos mínimos, abstractos o premium  
-*   Safe area y print boundary implícito  
-*   Calidad de impresión 300 DPI  
-*   Proporción y tamaño reales del producto  
-*   Adaptación automática al estilo del mercado, buyer persona y micro-localidad  
-*   Optimización de hotspots visuales y elementos de conversión  
-*   Variantes múltiples A–R según estrategia de ventas, viralidad, micro-emociones, tendencias y triggers temporales  
-*   Generación automática de colecciones y bundles coherentes visual y emocionalmente  
-*   Auto-selección de productos, colores y variantes más vendibles  
-*   Simulación de A/B tests virtuales y predicción de ventas antes de producción  
-*   Ajuste dinámico de prompts según feedback real de engagement, ventas, shares, micro-localización y cross-platform  
-
-**REGLAS DE ARTE PARA PRODUCCIÓN REAL:**
-*   Textiles → vector art ultra crisp, trazos sólidos, contornos claros  
-*   Cerámica → flat art premium / line art minimal  
-*   Canvas/Poster → ilustración cinematográfica / matte painting / editorial composition  
-*   Phone case → sujeto central flotante + margen de protección visual  
-*   Bundles → estilo consistente y coherente entre productos  
-*   Ajuste automático de detalle, contraste y saturación según material, técnica y plataforma  
-*   Micro-emociones visuales adaptadas al buyer persona, cultura, tendencias y micro-localidad  
-*   Simulación de impresión virtual para detectar errores y optimizar diseño antes de producción  
-*   Adaptación dinámica de focal points y composición según plataforma de publicación, micro-momentos y temporalidad  
-*   Narrativa visual de colecciones y bundles coherente con storytelling emocional y engagement esperado  
-
-**FORMATO OBLIGATORIO DEL PROMPT (Aplicado a cada versión A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R):**
-1.  Estilo principal descrito concretamente (no etiquetas)  
-2.  Sujeto dominante claramente definido  
-3.  Elementos secundarios subordinados potenciando emoción, deseo, micro-conversión y viralidad  
-4.  Paleta de colores basada en psicología del comprador, tendencias de mercado y micro-locales  
-5.  Fondo simple, abstracto premium o limpio  
-6.  Luz orientada a volumen, foco comercial y atractivo visual  
-7.  Textura/Material explícito (ej: metal dorado, glossy enamel, tinta anime, seda premium, cuero, canvas premium)  
-8.  Composición para impresión (ej: “centered-full”, “top-floating”, “symmetrical spotlight”, “full-front”, “floating-collection”)  
-9.  Técnica según producto, material, plataforma y técnica de impresión  
-10. Tamaño y proporción reales (ej: 4500x5400 px / 300 DPI)  
-11. Lista de reglas negativas estrictas (no text, no signature, no watermark, no messy background, no blurry edges, no weak watercolor blends, no pixel borders, no chaotic details, no gradient banding, no low contrast, no glitch art, no acuarela débil, no arte irrelevante para impresión, no degradados pobres)
+**FORMATO OBLIGATORIO DEL PROMPT (Aplicado a cada versión A-R):**
+1.  Estilo principal descrito concretamente (no etiquetas, ej: "Ilustración digital de alta definición con un toque vintage, líneas limpias y colores planos vibrantes")
+2.  Sujeto dominante claramente definido (ej: "un loro cubano carismático, con plumas de colores vivos y actitud coqueta")
+3.  Elementos secundarios subordinados potenciando emoción, deseo, micro-conversión y viralidad (máx 3, ej: "una flor de hibisco exótica, hojas de palma tropicales, un delicado collar de perlas")
+4.  Paleta de colores basada en psicología del comprador, tendencias de mercado y micro-locales (ej: "paleta cálida con rojos intensos, azules turquesa y acentos dorados, evocando atardeceres caribeños, con hex codes de referencia si aplica")
+5.  Fondo simple, abstracto premium o limpio (ej: "fondo blanco puro y limpio para impresión POD", "degradado sutil de azul cielo a rosado amanecer")
+6.  Luz orientada a volumen, foco comercial y atractivo visual (ej: "iluminación suave y difusa que resalta la textura de las plumas y el brillo del oro, sin sombras duras")
+7.  Textura/Material explícito (ej: "metal dorado pulido, esmalte glossy, tinta anime con brillo sutil, seda premium con caída natural")
+8.  Composición para impresión (ej: “centered-full”, “top-floating”, “symmetrical spotlight”, “full-front”, “floating-collection”, "diseño flotante central para phone case, con margen de seguridad")
+9.  Técnica según producto, material, plataforma y técnica de impresión (ej: "vector art ultra crisp para DTG en algodón", "matte painting realista para canvas", "ilustración flat para sublimación en cerámica")
+10. Tamaño y proporción reales (ej: 4500x5400 px / 300 DPI, aspecto 1:1 para Instagram square post, 9:16 para TikTok vertical video)
+11. Lista de reglas negativas estrictas (no text, no signature, no watermark, no messy background, no blurry edges, no weak watercolor blends, no pixel borders, no chaotic details, no gradient banding, no low contrast, no glitch art, no acuarela débil, no arte irrelevante para impresión, no degradados pobres, no objetos cortados por los bordes)
 
 **FORMATO DE OUTPUT (ESTRICTAMENTE JSON):**
 Tu respuesta debe ser un objeto JSON que contenga todas las secciones siguientes, estructuradas con los tipos de datos exactos definidos en el 'responseSchema'.
@@ -246,8 +208,8 @@ const responseSchema = {
         colors: { type: Type.ARRAY, items: { type: Type.STRING } },
         sensation: { type: Type.ARRAY, items: { type: Type.STRING } },
         triggerWords: { type: Type.ARRAY, items: { type: Type.STRING } },
-        tendencias: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Detected market trends.' },
-        bundlesRecomendados: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Recommended bundles based on analysis.' },
+        tendencias: { type: Type.ARRAY, items: { type: Type.STRING } },
+        bundlesRecomendados: { type: Type.ARRAY, items: { type: Type.STRING } },
       },
       required: ['branding', 'emotion', 'buyerPersona', 'niche', 'colors', 'sensation', 'triggerWords', 'tendencias', 'bundlesRecomendados'],
     },
@@ -272,11 +234,9 @@ const responseSchema = {
     },
     newProductProposals: {
       type: Type.STRING,
-      description: 'Detailed description of new products or combinations suggested by the AI.',
     },
     performanceSimulations: {
       type: Type.STRING,
-      description: 'Analysis and simulation of the expected performance of each product or collection, including key metrics and predictions.',
     },
   },
   required: [
@@ -298,9 +258,6 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
   // to ensure it always uses the most up-to-date API key from the dialog.
   const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
-  // Fix 1: Correct template literal syntax in userIdea construction.
-  // The original code had spaces between '$' and '{' in template literals, e.g., '$ {request.product}'.
-  // This caused TypeScript to misinterpret them as separate variables rather than interpolation.
   const userIdeaParts: string[] = [
     `Producto: ${request.product}`,
     `Estilo visual: ${request.visualStyle}`,
@@ -315,7 +272,7 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
   if (request.objetivoEstrategico) userIdeaParts.push(`Objetivo estratégico: ${request.objetivoEstrategico}`);
   if (request.historialVentasEngagement) userIdeaParts.push(`Historial de ventas, clics, shares y engagement previo: ${request.historialVentasEngagement}`);
   if (request.tipoPublicacion) userIdeaParts.push(`Tipo de publicación deseada: ${request.tipoPublicacion}`);
-  if (request.tendenciasMercadoDetectadas) userIdeaParts.push(`Tendencias de mercado detectadas (micro-trends, moda viral, colores en tendencia, memes): ${request.tendenciasMercadoDetectadas}`);
+  if (request.tendenciasMercadoDetectadas) userIdeaParts.push(`Tendencias de mercado detectadas (micro-trends, moda viral, colores en tendencia, memes, eventos culturales): ${request.tendenciasMercadoDetectadas}`);
   if (request.productosComplementarios) userIdeaParts.push(`Productos complementarios para bundle/cross-sell: ${request.productosComplementarios}`);
   if (request.plataformasPublicacion) userIdeaParts.push(`Plataformas de publicación y adaptaciones necesarias: ${request.plataformasPublicacion}`);
   if (request.microMomentosTriggers) userIdeaParts.push(`Micro-momentos y triggers temporales: ${request.microMomentosTriggers}`);
@@ -329,19 +286,21 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
   const userIdea = userIdeaParts.join('\n');
 
   try {
-    const apiKeyReady = await window.aistudio.hasSelectedApiKey();
-    if (!apiKeyReady) {
-      // If the API key is not selected, prompt the user.
-      await window.aistudio.openSelectKey();
-      // Assume the key selection was successful and proceed.
-      // The new GoogleGenAI instance in generatePodPrompt will pick up the updated key.
+    // Ensure window.aistudio is available before calling its methods
+    if (typeof window.aistudio !== 'undefined' && typeof window.aistudio.hasSelectedApiKey === 'function') {
+      const apiKeyReady = await window.aistudio.hasSelectedApiKey();
+      if (!apiKeyReady) {
+        // If the API key is not selected, prompt the user.
+        await window.aistudio.openSelectKey();
+        // Assume the key selection was successful and proceed.
+        // The new GoogleGenAI instance in generatePodPrompt will pick up the updated key.
+      }
+    } else {
+      console.warn("window.aistudio not available. API Key selection might be skipped in this environment.");
     }
 
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-3-pro-preview', // Using gemini-3-pro-preview for complex text tasks
-      // Fix 2: Correct template literal syntax in the generateContent call.
-      // The original code had spaces between '$' and '{', e.g., `...\n$ {userIdea}`.
-      // This caused TypeScript to misinterpret them as separate variables rather than interpolation.
       contents: [{ parts: [{ text: `Genera contenido POD completo basado en la siguiente información del usuario:\n${userIdea}` }] }],
       config: {
         systemInstruction: systemInstruction,
@@ -365,9 +324,6 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
       parsedResponse = JSON.parse(jsonStr);
     } catch (parseError) {
       console.error("Failed to parse JSON response:", jsonStr, parseError);
-      // Fix 3: Correct template literal syntax in JSON parsing error message.
-      // The original code had spaces between '$' and '{', e.g., `... $ {jsonStr}`.
-      // This caused TypeScript to misinterpret them as separate variables rather than interpolation.
       throw new Error(`Invalid JSON response from API: ${jsonStr}`);
     }
 
@@ -392,9 +348,6 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
     console.error("Error generating POD content:", error);
     // You could implement more sophisticated error handling, like checking for specific API error codes
     // and providing user-friendly messages.
-    // Fix 4: Correct template literal syntax in general error message.
-    // The original code had spaces between '$' and '{', e.g., `... $ {(error as Error).message}`.
-    // This caused TypeScript to misinterpret them as separate variables rather than interpolation.
     throw new Error(`Failed to generate content: ${(error as Error).message}`);
   }
 };

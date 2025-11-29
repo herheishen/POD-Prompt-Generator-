@@ -2,19 +2,19 @@
 
 export interface PromptGenerationRequest {
   product: string; // (hoodie, taza, bikini, canvas, phone case, sticker, tote, bundle completo, colección, productos sugeridos por IA)
-  visualStyle: string; // (cubano retro, luxury gold, anime neon, vaporwave premium, kawaii kids, cyber latina)
-  buyerPersona: string; // (edad, intereses, cultura, tribu social, comportamiento de compra, hábitos, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, interacción cross-platform)
-  emotionPurpose: string; // (humor provocador, sensualidad premium, nostalgia, familia, aventura, motivación, deseo, high shareability)
+  visualStyle: string; // (cubano retro, luxury gold, anime neon, vaporwave premium, kawaii kids, cyber latina, futurista, minimal, maximalist)
+  buyerPersona: string; // (edad, intereses, cultura, tribu social, comportamiento de compra, hábitos, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, interacción cross-platform, micro-localización)
+  emotionPurpose: string; // (humor provocador, sensualidad premium, nostalgia, familia, aventura, motivación, deseo, high shareability, viral hook, triggers psicológicos)
   brandColors: string; // (hex o referencias)
-  market: string; // (US, EU, LATAM, JP)
+  market: string; // (US, EU, LATAM, JP, ciudades o micro-segmentos específicos)
   historialVentasEngagement?: string; // Optional: detailed sales, clicks, shares, and engagement history, including feedback real
-  tipoPublicacion?: string; // Optional: e-commerce product, TikTok hook, FB ad, Instagram story, Pinterest pin, Shorts
-  materialImpresion?: string; // New: Material de impresión (algodón, poliéster, cerámica, metal, glossy, canvas, cuero, seda)
-  tecnicaImpresionPreferida?: string; // New: Técnica de impresión preferida (sublimación, DTG, UV print, offset, screen print)
-  tendenciasMercadoDetectadas?: string; // Optional: detected market trends (micro-trends, viral fashion, trending colors, memes)
+  tipoPublicacion?: string; // Optional: e-commerce product, TikTok hook, FB ad, Instagram story, Pinterest pin, Shorts, Reels, YouTube Shorts, Meta Shops
+  materialImpresion?: string; // New: Material de impresión (algodón, poliéster, cerámica, metal, glossy, canvas, cuero, seda, resina, papel fotográfico premium)
+  tecnicaImpresionPreferida?: string; // New: Técnica de impresión preferida (sublimación, DTG, UV print, offset, screen print, serigrafía, foil)
+  tendenciasMercadoDetectadas?: string; // Optional: detected market trends (micro-trends, viral fashion, trending colors, memes, events culturales, seasonal trends)
   productosComplementarios?: string; // Optional: complementary products for bundle/cross-sell
   plataformasPublicacion?: string; // New: Platforms for publication and necessary adaptations
-  objetivoEstrategico?: string; // New: Strategic objective (ventas, viralidad, branding, premium, mass-market)
+  objetivoEstrategico?: string; // New: Strategic objective (ventas, viralidad, branding, premium, mass-market, colecciones, ROI, retención, repetición de compra)
   microMomentosTriggers?: string; // New: Micro-moments and temporal triggers (events, festivities, schedules, recent viral trends)
   datosCrossPlatform?: string; // New: Cross-platform data (social behavior, engagement historical per platform)
   datosHiperlocales?: string; // New: Hyperlocal data (trends, memes, local cultural references)
