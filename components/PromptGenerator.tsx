@@ -1,20 +1,9 @@
 
-
 import React, { useState, useCallback } from 'react';
 import { generatePodPrompt } from '../services/geminiService';
 import { ProductContentOutput, PromptGenerationRequest } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import CopyButton from './CopyButton';
-
-// Fix: Add missing window.aistudio type definition for AI Studio specific functions.
-declare global {
-  interface Window {
-    aistudio: {
-      hasSelectedApiKey: () => Promise<boolean>;
-      openSelectKey: () => Promise<void>;
-    };
-  }
-}
 
 const PromptGenerator: React.FC = () => {
   const [product, setProduct] = useState<string>('');
@@ -177,12 +166,12 @@ const PromptGenerator: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="buyerPersona" className="block text-sm font-medium text-gray-700 mb-1">Buyer persona (edad, intereses, cultura, micro-emociones, sensibilidad cultural, tipo de humor, interacción cross-platform, etc.):</label>
+          <label htmlFor="buyerPersona" className="block text-sm font-medium text-gray-700 mb-1">Buyer persona (edad, intereses, cultura, micro-emociones, sensibilidad cultural, tipo de humor, interacción cross-platform, micro-localización, etc.):</label>
           <input
             type="text"
             id="buyerPersona"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: hombres 25+, gamers, madres, o 'fans de la cultura cubana con micro-emoción de nostalgia vibrante, valoran humor sarcástico, activos en TikTok'"
+            placeholder="Ej: hombres 25+, gamers, madres, o 'fans de la cultura cubana con micro-emoción de nostalgia vibrante, valoran humor sarcástico, activos en TikTok en Miami'"
             value={buyerPersona}
             onChange={(e) => setBuyerPersona(e.target.value)}
           />
@@ -265,11 +254,11 @@ const PromptGenerator: React.FC = () => {
           />
         </div>
         <div className="md:col-span-2">
-          <label htmlFor="tendenciasMercadoDetectadas" className="block text-sm font-medium text-gray-700 mb-1">Tendencias de mercado detectadas (micro-trends, moda viral, colores en tendencia, memes) (opcional):</label>
+          <label htmlFor="tendenciasMercadoDetectadas" className="block text-sm font-medium text-gray-700 mb-1">Tendencias de mercado detectadas (micro-trends, moda viral, colores en tendencia, memes, eventos culturales) (opcional):</label>
           <textarea
             id="tendenciasMercadoDetectadas"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Ej: 'Los diseños minimalistas con colores pastel están ganando tracción en el mercado de la UE para productos de moda. El 'coastal grandmother' es una micro-tendencia viral, 'dark academia' en alza.'"
+            placeholder="Ej: 'Los diseños minimalistas con colores pastel están ganando tracción en el mercado de la UE para productos de moda. El 'coastal grandmother' es una micro-tendencia viral, 'dark academia' en alza. El Mundial de Fútbol en Julio es un evento cultural.'"
             rows={2}
             value={tendenciasMercadoDetectadas}
             onChange={(e) => setTendenciasMercadoDetectadas(e.target.value)}
