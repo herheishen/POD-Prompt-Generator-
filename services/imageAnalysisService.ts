@@ -36,7 +36,7 @@ export const analyzeImageWithGemini = async (request: ImageAnalysisRequest): Pro
     };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview', // Model for image understanding
+      model: 'gemini-2.5-flash', // Changed to standard Flash model
       contents: { parts: [imagePart, textPart] },
     });
 

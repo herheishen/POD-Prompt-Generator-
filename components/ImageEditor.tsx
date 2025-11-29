@@ -83,6 +83,9 @@ const ImageEditor: React.FC = () => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg border border-indigo-200">
+      <p className="text-sm text-yellow-800 bg-yellow-100 p-3 rounded-md mb-4 border border-yellow-200">
+        <strong>Nota:</strong> Esta función utiliza el modelo Gemini 2.5 Flash estándar, lo que puede resultar en una calidad de edición de imágenes más básica en comparación con modelos avanzados especializados.
+      </p>
       <div className="mb-6">
         <label htmlFor="imageUpload" className="block text-sm font-medium text-gray-700 mb-1">
           Sube tu imagen para editar:

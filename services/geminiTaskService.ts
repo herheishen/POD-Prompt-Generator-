@@ -14,21 +14,17 @@ export const generateGeminiTaskResponse = async (request: GeminiTaskRequest): Pr
   const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
   let modelName: string;
-  let config: any = {};
+  // No special config for thinkingConfig as it's for Pro models (removed)
 
   switch (request.modelType) {
     case GeminiModelType.Fast:
       modelName = 'gemini-2.5-flash';
       break;
-    case GeminiModelType.FastLite: // New case for Flash-Lite
+    case GeminiModelType.FastLite:
       modelName = 'gemini-2.5-flash-lite';
       break;
     case GeminiModelType.Complex:
-      modelName = 'gemini-3-pro-preview';
-      // Apply thinkingBudget if enabled and using a compatible model
-      if (request.enableDeepThinking) {
-        config.thinkingConfig = { thinkingBudget: 32768 }; // Max for gemini-3-pro-preview
-      }
+      modelName = 'gemini-2.5-flash'; // Complex now also maps to Flash
       break;
     default:
       modelName = 'gemini-2.5-flash'; // Default to Flash
@@ -50,7 +46,7 @@ export const generateGeminiTaskResponse = async (request: GeminiTaskRequest): Pr
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: modelName,
       contents: [{ parts: [{ text: request.prompt }] }],
-      config: config, // Pass the config object
+      // config: config, // config object now empty, no need to pass it explicitly unless it has other fields
     });
 
     const responseText = response.text;

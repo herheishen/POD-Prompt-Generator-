@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { ProductContentOutput, PromptGenerationRequest, AutonomousFieldsRequest, AutonomousFieldsOutput } from '../types';
 
@@ -15,10 +14,10 @@ const getApiKey = (): string => {
 };
 
 // Define the system instruction to guide the Gemini model for comprehensive content generation
-const systemInstruction = `Actúa como un generador profesional de prompts especializado en Print-On-Demand para productos físicos reales (Printify/Printful + Shopify). Tu tarea NO es generar imágenes, sino crear prompts estratégicos, predictivos, adaptativos, comerciales, imprimibles, auto-optimizable, omnicanal, multimodal y completamente autónomos, listos para cualquier generador visual (Google Imagen, Midjourney, Grok Vision, SDXL) y marketing digital. Genera además colecciones completas, bundles, copywriting, embudos, simulaciones hiper-real de impacto viral, predicciones de micro-emociones y ajustes automáticos por plataforma en tiempo real. La IA aprende de ventas, clics, shares, micro-trends, emociones del buyer persona y feedback real, evolucionando constantemente sin intervención humana.
+const systemInstruction = `Actúa como un generador profesional de prompts especializado en Print-On-Demand para productos físicos reales (Printify/Printful + Shopify). Tu tarea NO es generar imágenes, sino crear prompts estratégicos, predictivos, adaptativos, comerciales, imprimibles, auto-optimizable, omnicanal, multimodal y completamente autónomos, listos para cualquier generador visual (Google Imagen, Midjourney, Grok Vision, SDXL) y marketing digital. Genera además colecciones completas, bundles, copywriting, embudos, simulaciones de impacto viral básicas, y ajustes automáticos por plataforma. Utiliza solo modelos gratuitos/estándar.
 
 OBJETIVO:
-Maximizar ventas, deseo, engagement, valor percibido, viralidad, ROI, branding, retención y repetición de compra. Los prompts deben ser claros, centrados en impresión, legibles, evitando errores, ruido visual o detalles débiles. Deben anticipar micro-trends emergentes y oportunidades comerciales antes de que se demanden.
+Maximizar ventas, deseo, engagement, valor percibido, y branding. Los prompts deben ser claros, centrados en impresión, legibles, evitando errores, ruido visual o detalles débiles. Deberás sugerir oportunidades comerciales basadas en la Idea Base.
 
 PROCESO DE GENERACIÓN AUTÓNOMA:
 El usuario proporcionará una "Idea Base". Tu tarea es utilizar esta "Idea Base" como punto de partida crucial.
@@ -27,10 +26,10 @@ Debes explicar brevemente la razón estratégica detrás de cada selección o in
 Una vez que TODOS los campos (proporcionados por el usuario o generados por ti) estén completos, procederás con la generación del OUTPUT completo.
 
 INSTRUCCIONES CLAVE:
-1.  **Inventar Buyer Persona:** Si el "Buyer persona" del usuario es vago o poco estratégico (o si no se proporciona), crea un buyer persona específico y detallado para el producto, incluyendo edad, intereses, cultura, tribu social, comportamiento de compra, hábitos de consumo, engagement histórico, micro-emociones, sensibilidad cultural, tipo de humor, e interacción cross-platform, micro-localización. Este buyer persona inventado debe ser parte del output, y si lo generas tú, también debe aparecer en 'aiGeneratedBuyerPersona'.
+1.  **Inventar Buyer Persona:** Si el "Buyer persona" del usuario es vago o poco estratégico (o si no se proporciona), crea un buyer persona específico y detallado para el producto, incluyendo edad, intereses, cultura, tribu social, comportamiento de compra, hábitos de consumo, micro-emociones, sensibilidad cultural, tipo de humor, e interacción cross-platform, micro-localización. Este buyer persona inventado debe ser parte del output, y si lo generas tú, también debe aparecer en 'aiGeneratedBuyerPersona'.
 2.  **Prohibiciones:** Nunca generar boxers o productos no solicitados. Si el producto es ropa interior (bikini, lencería), el diseño debe ser provocativo sin caer en pornografía explícita.
 3.  **Tono Variants:** Genera 5 variantes de tono para el copy (🔥 sexy / 🥺 cute / 🚀 aspiracional / 😈 peligrosa / 🧠 coleccionista).
-4.  **Adaptación Automática (Versión D):** Si se proporciona un "historial de ventas, clics, shares y engagement previo" y "tendencias de mercado detectadas", usa esa información para optimizar automáticamente el color, la composición, focal point, micro-emociones y los elementos secundarios del prompt de la Versión D. Si no se proporciona, crea una versión optimizada basándote en una suposición informada del mercado, buyer persona y tipo de publicación deseada.
+4.  **Adaptación Automática (Versión D):** Si se proporciona un "historial de ventas, clics, shares y engagement previo" y "tendencias de mercado detectadas", usa esa información para optimizar el color, la composición, focal point, micro-emociones y los elementos secundarios del prompt de la Versión D. Si no se proporciona, crea una versión optimizada basándote en una suposición informada del mercado, buyer persona y tipo de publicación deseada.
 5.  **Versión E (Bundle / Cross-sell):** Genera prompts para productos complementarios automáticamente, pensando en upsell y packs visualmente coherentes, usando "Productos complementarios para bundle/cross-sell" si se proporciona, o inventando si aplica.
 6.  **Versión F (Collection Complete):** Genera colecciones completas coherentes de 3–10 productos con narrativa visual consistente y alineada a buyer persona, emociones y tendencias.
 7.  **Versión G (Auto-Predictive):** Selecciona automáticamente qué productos, variantes y colores generar para maximizar ventas y viralidad, simulando A/B test virtuales antes de producción, basándose en el "Historial de ventas y engagement previo" y "Tendencias de mercado detectadas". Si esta información no se proporciona, genera una versión predictiva basada en suposiciones inteligentes del mercado y buyer persona.
@@ -41,14 +40,14 @@ INSTRUCCIONES CLAVE:
 12. **Versión L (Full Predictive AI):** Ajuste dinámico de focal points, composición, colores, micro-emociones, copy y bundles basados en tendencias globales y feedback real en tiempo real.
 13. **Versión M (Hyperlocal Adaptive):** Ajuste automático según tendencias locales, micro-trends y referencias culturales por región. Se basa en "Datos hiperlocales" y "Mercado objetivo" (ciudades o micro-segmentos específicos).
 14. **Versión N (Cross-Platform Optimizer):** Ajusta prompts, composición y color según engagement histórico por plataforma y tipo de publicación. Se basa en "Datos cross-platform".
-15. **Versión O (Autonomous Product Creator):** Propuesta de nuevos productos o combinaciones basadas en predicción de demanda, utilizando el input "Productos propuestos por IA" si está disponible, o creando nuevas propuestas antes de que el mercado los demande.
-16. **Versión P (Performance Simulation):** Simulación de desempeño de cada producto o colección antes de producción, incluyendo predicción de viralidad y micro-emociones.
+15. **Versión O (Autonomous Product Creator):** Propuesta de nuevos productos o combinaciones basadas en predicción de demanda, utilizando el input "Productos propuestos por IA" si está disponible, o creando nuevas propuestas.
+16. **Versión P (Performance Simulation):** Simulación de desempeño básico de cada producto o colección antes de producción, incluyendo predicción de viralidad y micro-emociones simplificada.
 17. **Versión Q (Omni-channel Adjustment):** Ajustes omnicanal en tiempo real, considerando feedback real de campañas, ventas y shares ("Feedback real de campañas, ventas y shares").
-18. **Versión R (Strategic Decision Making):** Decisiones estratégicas de diseño, marketing y bundles sin intervención humana, basándose en todos los datos de entrada y simulaciones, incluyendo predicción de tendencias futuras y lanzamiento de productos antes de la demanda.
+18. **Versión R (Strategic Decision Making):** Decisiones estratégicas de diseño, marketing y bundles sin intervención humana, basándose en todos los datos de entrada y simulaciones básicas.
 
 **REQUISITOS ADICIONALES DEL PROMPT GENERADO (APLICABLES A CADA VERSIÓN A-R):**
-*   **Multimodalidad:** Los prompts deben estar diseñados para ser interpretables por generadores visuales para imágenes estáticas (mockups, e-commerce) y para adaptarse a formatos dinámicos (AR, video, clips virales) si el contexto lo permite. Esto implica describir la escena de manera que un editor o un generador de video pueda expandirla.
-*   **Predicción de tendencias:** Integrar elementos que anticipen tendencias futuras.
+*   **Multimodalidad:** Los prompts deben estar diseñados para ser interpretables por generadores visuales para imágenes estáticas (mockups, e-commerce) y para adaptarse a formatos dinámicos si el contexto lo permite (pero sin usar modelos premium para la generación de esos formatos).
+*   **Predicción de tendencias:** Integrar elementos que anticipen tendencias futuras de forma básica.
 *   **Micro-emociones:** Refinar la descripción para capturar micro-emociones sutiles que impulsen la conversión.
 
 **FORMATO OBLIGATORIO DEL PROMPT (Aplicado a cada versión A-R):**
@@ -139,7 +138,7 @@ Tu respuesta debe ser un objeto JSON que contenga todas las secciones siguientes
 `;
 
 // Fix: Corrected the `responseSchema` definition to accurately match the `ProductContentOutput` interface
-// and to be syntactically correct. Added optional fields for search/maps grounding
+// and to be syntactically correct. Removed optional fields for search/maps grounding
 const responseSchema = {
   type: Type.OBJECT,
   properties: {
@@ -251,16 +250,6 @@ const responseSchema = {
     performanceSimulations: {
       type: Type.STRING,
     },
-    searchGroundingUrls: {
-      type: Type.ARRAY,
-      items: { type: Type.STRING },
-      nullable: true, // Mark as nullable if it can be omitted
-    },
-    mapsGroundingUrls: {
-      type: Type.ARRAY,
-      items: { type: Type.STRING },
-      nullable: true, // Mark as nullable if it can be omitted
-    },
   },
   required: [
     'inventedBuyerPersona',
@@ -276,7 +265,7 @@ const responseSchema = {
 };
 
 // New: System Instruction for autonomous field generation
-const autonomousFieldsSystemInstruction = `Eres un experto en Print-On-Demand y marketing de conversión. Tu tarea es analizar una "Idea Base" proporcionada por el usuario y, de forma autónoma, sugerir los mejores valores para los campos "Producto", "Estilo visual", "Buyer persona", "Emoción principal", "Colores clave", y "Mercado objetivo". Justifica brevemente cada una de tus selecciones con razonamiento comercial, enfoque en viralidad y branding premium.
+const autonomousFieldsSystemInstruction = `Eres un experto en Print-On-Demand y marketing de conversión. Tu tarea es analizar una "Idea Base" proporcionada por el usuario y, de forma autónoma, sugerir los mejores valores para los campos "Producto", "Estilo visual", "Buyer persona", "Emoción principal", "Colores clave", y "Mercado objetivo". Justifica brevemente cada una de tus selecciones con razonamiento comercial, enfoque en viralidad y branding premium, utilizando solo modelos de IA estándar/gratuitos.
 
 Reglas:
 - Genera UNA ÚNICA sugerencia para cada campo.
@@ -342,86 +331,9 @@ const autonomousFieldsResponseSchema = {
 };
 
 
-// Helper function for Google Search Grounding
-async function fetchSearchGroundingData(query: string): Promise<{ text: string; urls: string[] }> {
-  const ai = new GoogleGenAI({ apiKey: getApiKey() });
-  try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [{ parts: [{ text: query }] }],
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
-    });
+// Removed: fetchSearchGroundingData (due to premium tool/model)
+// Removed: fetchMapsGroundingData (due to premium tool/model)
 
-    const urls: string[] = [];
-    if (response.candidates?.[0]?.groundingMetadata?.groundingChunks) {
-      for (const chunk of response.candidates[0].groundingMetadata.groundingChunks) {
-        if ((chunk as any).web?.uri) { // Type assertion for web property
-          urls.push((chunk as any).web.uri);
-        }
-      }
-    }
-
-    return { text: response.text || '', urls: urls };
-
-  } catch (error) {
-    console.error("Error during Google Search grounding:", error);
-    // Do not throw, return empty or partial data to allow main prompt generation to proceed
-    return { text: '', urls: [] };
-  }
-}
-
-// Helper function for Google Maps Grounding
-async function fetchMapsGroundingData(query: string, latLng?: { latitude: number; longitude: number }): Promise<{ text: string; urls: string[] }> {
-  const ai = new GoogleGenAI({ apiKey: getApiKey() });
-  try {
-    const config: any = {
-      tools: [{ googleMaps: {} }],
-    };
-
-    if (latLng) {
-      config.toolConfig = {
-        retrievalConfig: {
-          latLng: latLng,
-        },
-      };
-    }
-
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [{ parts: [{ text: query }] }],
-      config: config,
-    });
-
-    const urls: string[] = [];
-    if (response.candidates?.[0]?.groundingMetadata?.groundingChunks) {
-      for (const chunk of response.candidates[0].groundingMetadata.groundingChunks) {
-        if ((chunk as any).maps?.uri) { // Type assertion for maps property
-          urls.push((chunk as any).maps.uri);
-        }
-        if ((chunk as any).maps?.placeAnswerSources) {
-          for (const source of (chunk as any).maps.placeAnswerSources) {
-            if (source.reviewSnippets) {
-              for (const snippet of source.reviewSnippets) {
-                if (snippet.uri) {
-                  urls.push(snippet.uri);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return { text: response.text || '', urls: urls }; // Corrected to return urls
-
-  } catch (error) {
-    console.error("Error during Google Maps grounding:", error);
-    // Do not throw, return empty or partial data to allow main prompt generation to proceed
-    return { text: '', urls: [] };
-  }
-}
 
 // New: Function to generate autonomous fields
 export const generateAutonomousFields = async (request: AutonomousFieldsRequest): Promise<AutonomousFieldsOutput> => {
@@ -440,7 +352,7 @@ export const generateAutonomousFields = async (request: AutonomousFieldsRequest)
     const promptText = `Idea Base del usuario: ${request.baseIdea}`;
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview', // Use Pro for this complex task
+      model: 'gemini-2.5-flash', // Changed to Flash for standard models
       contents: [{ parts: [{ text: promptText }] }],
       config: {
         systemInstruction: autonomousFieldsSystemInstruction,
@@ -512,9 +424,6 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
   if (request.feedbackRealCampanas) userIdeaParts.push(`Feedback real de campañas, ventas y shares: ${request.feedbackRealCampanas}`);
   if (request.preferenciasStorytelling) userIdeaParts.push(`Preferencias de storytelling visual y narrativa de colecciones: ${request.preferenciasStorytelling}`);
 
-  let searchGroundingUrls: string[] = [];
-  let mapsGroundingUrls: string[] = [];
-
   try {
     // Ensure window.aistudio is available before calling its methods
     if (typeof window.aistudio !== 'undefined' && typeof window.aistudio.hasSelectedApiKey === 'function') {
@@ -529,34 +438,13 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
       console.warn("window.aistudio not available. API Key selection might be skipped in this environment.");
     }
 
-    // --- Search Grounding ---
-    if (request.tendenciasMercadoDetectadas || request.datosHiperlocales || request.microMomentosTriggers) {
-      const searchQuery = `Información actualizada sobre ${request.tendenciasMercadoDetectadas || ''} ${request.datosHiperlocales || ''} ${request.microMomentosTriggers || ''}`;
-      const searchResult = await fetchSearchGroundingData(searchQuery);
-      if (searchResult.text) {
-        userIdeaParts.push(`Información de Google Search (actualizada): ${searchResult.text}`);
-      }
-      if (searchResult.urls.length > 0) {
-        searchGroundingUrls = searchResult.urls;
-      }
-    }
-
-    // --- Maps Grounding ---
-    if (request.market || request.ciudadesMicroSegmentos || request.userLocation) {
-      const mapsQuery = `Puntos de interés o culturalmente relevantes en ${request.ciudadesMicroSegmentos || request.market || 'mi área'}`;
-      const mapsResult = await fetchMapsGroundingData(mapsQuery, request.userLocation);
-      if (mapsResult.text) {
-        userIdeaParts.push(`Información de Google Maps (localización): ${mapsResult.text}`);
-      }
-      if (mapsResult.urls.length > 0) {
-        mapsGroundingUrls = mapsResult.urls;
-      }
-    }
+    // --- Search Grounding (REMOVED) ---
+    // --- Maps Grounding (REMOVED) ---
 
     const userIdea = userIdeaParts.join('\n');
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview', // Using gemini-3-pro-preview for complex text tasks
+      model: 'gemini-2.5-flash', // Changed to Flash for standard models
       contents: [{ parts: [{ text: `Genera contenido POD completo basado en la siguiente información del usuario:\n${userIdea}` }] }],
       config: {
         systemInstruction: systemInstruction,
@@ -596,14 +484,6 @@ export const generatePodPrompt = async (request: PromptGenerationRequest): Promi
       !parsedResponse.performanceSimulations
     ) {
       throw new Error("API response is missing one or más required top-level fields.");
-    }
-
-    // Attach grounding URLs to the parsed response
-    if (searchGroundingUrls.length > 0) {
-      parsedResponse.searchGroundingUrls = searchGroundingUrls;
-    }
-    if (mapsGroundingUrls.length > 0) {
-      parsedResponse.mapsGroundingUrls = mapsGroundingUrls;
     }
 
     return parsedResponse;

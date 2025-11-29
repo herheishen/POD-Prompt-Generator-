@@ -82,7 +82,7 @@ const PromptGenerator: React.FC = () => {
   const [ciudadesMicroSegmentos, setCiudadesMicroSegmentos] = useState<string>('');
   const [feedbackRealCampanas, setFeedbackRealCampanas] = useState<string>('');
   const [preferenciasStorytelling, setPreferenciasStorytelling] = useState<string>('');
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | undefined>(undefined);
+  // Removed: const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | undefined>(undefined);
 
 
   const [generatedContent, setGeneratedContent] = useState<ProductContentOutput | null>(null);
@@ -93,34 +93,9 @@ const PromptGenerator: React.FC = () => {
   const [errorAutonomous, setErrorAutonomous] = useState<string | null>(null); // New state for autonomous fill error
 
 
-  // Function to get user's geolocation
-  const getUserLocation = useCallback(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          setError(null); // Clear any previous location error
-        },
-        (err) => {
-          console.error("Error getting geolocation:", err);
-          const errorMessage = typeof err.message === 'string' ? err.message : `Código de error: ${err.code}`;
-          setError(`Error al obtener la ubicación: ${errorMessage}. Algunas funciones de Maps Grounding podrían no ser precisas.`);
-          setUserLocation(undefined); // Reset location on error
-        },
-        { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 }
-      );
-    } else {
-      setError("La geolocalización no es soportada por este navegador. Algunas funciones de Maps Grounding podrían no ser precisas.");
-    }
-  }, []);
+  // Removed: Function to get user's geolocation (no Maps grounding)
+  // Removed: Call getUserLocation on component mount
 
-  // Call getUserLocation on component mount
-  React.useEffect(() => {
-    getUserLocation();
-  }, [getUserLocation]);
 
   const handleChipToggle = (currentSelection: string[], setter: React.Dispatch<React.SetStateAction<string[]>>, chipValue: string) => {
     if (currentSelection.includes(chipValue)) {
@@ -234,7 +209,7 @@ const PromptGenerator: React.FC = () => {
       ciudadesMicroSegmentos: ciudadesMicroSegmentos.trim() !== '' ? ciudadesMicroSegmentos : undefined,
       feedbackRealCampanas: feedbackRealCampanas.trim() !== '' ? feedbackRealCampanas : undefined,
       preferenciasStorytelling: preferenciasStorytelling.trim() !== '' ? preferenciasStorytelling : undefined,
-      userLocation: userLocation, // Pass user's current location
+      // Removed: userLocation: userLocation, // Pass user's current location
     };
 
     try {
@@ -304,7 +279,7 @@ const PromptGenerator: React.FC = () => {
     ciudadesMicroSegmentos,
     feedbackRealCampanas,
     preferenciasStorytelling,
-    userLocation,
+    // Removed: userLocation,
   ]);
 
   const renderSection = (title: string, content: string | React.JSX.Element, copyText?: string): React.JSX.Element => (
@@ -737,31 +712,8 @@ const PromptGenerator: React.FC = () => {
             JSON.stringify(generatedContent.socialMediaCopy, null, 2) // Copy full JSON for Social Media section
           )}
 
-          {generatedContent.searchGroundingUrls && generatedContent.searchGroundingUrls.length > 0 && (
-            <div className="mb-6 bg-blue-50 p-4 rounded-md border border-blue-200">
-              <h3 className="text-xl font-bold text-blue-800 flex items-center mb-2">
-                <span className="text-blue-600 mr-2">🔍</span> Fuentes de Google Search
-              </h3>
-              <ul className="list-disc list-inside ml-4 text-blue-700">
-                {generatedContent.searchGroundingUrls.map((url, index) => (
-                  <li key={index}><a href={url} target="_blank" rel="noopener noreferrer" className="hover:underline">{url}</a></li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {generatedContent.mapsGroundingUrls && generatedContent.mapsGroundingUrls.length > 0 && (
-            <div className="mb-6 bg-green-50 p-4 rounded-md border border-green-200">
-              <h3 className="text-xl font-bold text-green-800 flex items-center mb-2">
-                <span className="text-green-600 mr-2">🗺️</span> Fuentes de Google Maps
-              </h3>
-              <ul className="list-disc list-inside ml-4 text-green-700">
-                {generatedContent.mapsGroundingUrls.map((url, index) => (
-                  <li key={index}><a href={url} target="_blank" rel="noopener noreferrer" className="hover:underline">{url}</a></li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Removed: Search Grounding URLs display */}
+          {/* Removed: Maps Grounding URLs display */}
 
           {renderSection("🎨 3. Prompt IA Diseño Visual (Mass Market)", generatedContent.visualAIPrompt.versionA, generatedContent.visualAIPrompt.versionA)}
           {renderSection("🎨 3. Prompt IA Diseño Visual (Premium / Limited Edition)", generatedContent.visualAIPrompt.versionB, generatedContent.visualAIPrompt.versionB)}

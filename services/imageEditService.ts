@@ -37,7 +37,7 @@ export const editImageWithGemini = async (request: ImageEditRequest): Promise<Im
     };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image', // Model for image generation/editing
+      model: 'gemini-2.5-flash', // Changed to standard Flash model
       contents: { parts: [imagePart, textPart] },
     });
 

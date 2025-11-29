@@ -6,7 +6,7 @@ import { GeminiTaskRequest, GeminiModelType } from '../types';
 const GeminiTask: React.FC = () => {
   const [taskPrompt, setTaskPrompt] = useState<string>('');
   const [modelType, setModelType] = useState<GeminiModelType>(GeminiModelType.Fast);
-  const [enableDeepThinking, setEnableDeepThinking] = useState<boolean>(false); // New state for deep thinking
+  // Removed: const [enableDeepThinking, setEnableDeepThinking] = useState<boolean>(false);
   const [responseText, setResponseText] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,7 @@ const GeminiTask: React.FC = () => {
     const request: GeminiTaskRequest = {
       prompt: taskPrompt,
       modelType: modelType,
-      enableDeepThinking: enableDeepThinking, // Pass deep thinking flag
+      // Removed: enableDeepThinking: enableDeepThinking,
     };
 
     try {
@@ -60,7 +60,7 @@ const GeminiTask: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [taskPrompt, modelType, enableDeepThinking]);
+  }, [taskPrompt, modelType]);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg border border-indigo-200">
@@ -90,23 +90,11 @@ const GeminiTask: React.FC = () => {
             onChange={(e) => setModelType(e.target.value as GeminiModelType)}
           >
             <option value={GeminiModelType.Fast}>Tarea Rápida (Flash)</option>
-            <option value={GeminiModelType.FastLite}>Tarea Rápida (Flash-Lite)</option> {/* New option */}
-            <option value={GeminiModelType.Complex}>Tarea Compleja (Pro)</option>
+            <option value={GeminiModelType.FastLite}>Tarea Rápida (Flash-Lite)</option>
+            <option value={GeminiModelType.Complex}>Tarea Compleja (Flash)</option> {/* Updated label */}
           </select>
         </div>
-        <div className="flex items-center mt-6 md:mt-0">
-          <input
-            type="checkbox"
-            id="enableDeepThinking"
-            className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-            checked={enableDeepThinking}
-            onChange={(e) => setEnableDeepThinking(e.target.checked)}
-            disabled={modelType !== GeminiModelType.Complex} // Only enable for Complex model
-          />
-          <label htmlFor="enableDeepThinking" className="ml-2 block text-sm font-medium text-gray-700">
-            Habilitar Pensamiento Profundo (Solo para Tarea Compleja)
-          </label>
-        </div>
+        {/* Removed: Deep Thinking Checkbox */}
       </div>
 
       <button

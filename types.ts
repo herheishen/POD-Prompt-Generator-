@@ -1,5 +1,4 @@
 
-
 export interface PromptGenerationRequest {
   baseIdea: string; // New: Mandatory base idea for autonomous generation
   product?: string; // Optional: (hoodie, taza, bikini, canvas, phone case, sticker, tote, bundle completo, colección, productos sugeridos por IA)
@@ -109,8 +108,6 @@ export interface ProductContentOutput {
   };
   newProductProposals: string; // New: Proposed new products or combinations
   performanceSimulations: string; // New: Performance simulation for products/collections
-  searchGroundingUrls?: string[]; // Optional: URLs from Google Search grounding
-  mapsGroundingUrls?: string[]; // Optional: URLs from Google Maps grounding
 }
 
 export interface ImageEditRequest {
@@ -124,30 +121,15 @@ export interface ImageEditResponse {
   editedImageMimeType: string;
 }
 
-export type ImageAspectRatio = '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '9:16' | '16:9' | '21:9';
-export type ImageSize = '1K' | '2K' | '4K';
-
-export interface ImageGenerationRequest {
-  textPrompt: string;
-  imageSize: ImageSize;
-  aspectRatio: ImageAspectRatio;
-}
-
-export interface ImageGenerationResponse {
-  generatedImageBase64: string;
-  generatedImageMimeType: string;
-}
-
 export enum GeminiModelType {
   Fast = 'flash',
-  FastLite = 'flash-lite', // New: for gemini-2.5-flash-lite
-  Complex = 'pro',
+  FastLite = 'flash-lite',
+  Complex = 'flash', // Complex now also maps to flash
 }
 
 export interface GeminiTaskRequest {
   prompt: string;
   modelType: GeminiModelType;
-  enableDeepThinking?: boolean; // New: for thinkingBudget
 }
 
 export interface GeminiTaskResponse {
@@ -191,36 +173,4 @@ export interface AutonomousFieldsOutput {
   emotionPurpose: AutonomousFieldValue;
   brandColors: AutonomousFieldValue;
   market: AutonomousFieldValue;
-}
-
-// New: Video Generation interfaces
-export interface VideoGenerationRequest {
-  textPrompt?: string;
-  base64Image?: string;
-  mimeType?: string; // Mime type of the base64Image if provided
-  aspectRatio: '16:9' | '9:16';
-}
-
-export interface VideoGenerationResponse {
-  videoUri: string;
-}
-
-// New: VeoOperation interface based on @google/genai operation response
-export interface VeoOperation {
-  done: boolean;
-  name: string; // The operation name for polling
-  metadata?: any; // Optional metadata, not strictly used here
-  error?: {
-    code: number;
-    message: string;
-    details?: any[];
-  };
-  response?: {
-    generatedVideos?: Array<{
-      video?: {
-        uri?: string;
-        // other video properties like `aspectRatio`, `resolution`, `duration`, `mimeType` could be here
-      };
-    }>;
-  };
 }

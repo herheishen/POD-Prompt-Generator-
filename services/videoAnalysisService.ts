@@ -46,7 +46,7 @@ export const analyzeVideoWithGemini = async (request: VideoAnalysisRequest): Pro
     };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview', // Model for video understanding
+      model: 'gemini-2.5-flash', // Changed to standard Flash model
       contents: { parts: [videoPart, textPart] },
     });
 
