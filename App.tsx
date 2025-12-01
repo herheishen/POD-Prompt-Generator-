@@ -20,7 +20,7 @@ const App: React.FC = () => {
         <PromptGenerator />
       </main>
       <footer className="w-full max-w-4xl text-center text-gray-500 text-sm mt-12 py-4 border-t border-gray-200">
-        &copy; {new Date().getFullYear()} POD AI Studio. All rights reserved.
+        &copy; {new Date().getFullYear()} Herheishen. All rights reserved.
       </footer>
     </div>
   );
